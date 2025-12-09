@@ -1,0 +1,31 @@
+#debug: true
+# 공통 설정
+server:
+  port: 8080
+
+spring:
+  profiles:
+    # 로컬에서 별도 지정 안 하면 'local'이 기본 적용됨
+    default: local
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        format_sql: true
+
+logging:
+  level:
+    org.hibernate.SQL: debug
+
+---
+# 로컬 프로필: 로컬 MySQL(3306) 사용
+spring:
+  config:
+    activate:
+      on-profile: local
+  datasource:
+    url: jdbc:mysql://127.0.0.1:3306/erp?allowPublicKeyRetrieval=true&useSSL=false&characterEncoding=utf8&serverTimezone=Asia/Seoul
+    username: root
+    password: 250756
