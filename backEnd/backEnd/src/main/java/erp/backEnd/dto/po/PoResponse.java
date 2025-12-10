@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Data
@@ -17,16 +18,18 @@ public class PoResponse {
     private LocalDate deliveryDate; // 납기 요청일
     private PoStatus poStatus;      // 발주 상태
     private String etc;
+    private LocalDateTime createDate;
 
     private List<PoItemResponse> items;  // 발주 품목 리스트
 
     @QueryProjection
-    public PoResponse(Long id, String vendorName, String vendorCode, LocalDate deliveryDate, PoStatus poStatus, String etc) {
+    public PoResponse(Long id, String vendorName, String vendorCode, LocalDate deliveryDate, PoStatus poStatus, String etc, LocalDateTime createDate) {
         this.id = id;
         this.vendorName = vendorName;
         this.vendorCode = vendorCode;
         this.deliveryDate = deliveryDate;
         this.poStatus = poStatus;
         this.etc = etc;
+        this.createDate = createDate;
     }
 }

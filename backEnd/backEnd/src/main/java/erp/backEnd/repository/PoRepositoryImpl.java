@@ -42,11 +42,12 @@ public class PoRepositoryImpl extends QuerydslRepositorySupport implements PoRep
         return queryFactory
                 .select(new QPoResponse(
                         po.id,
-                        vendor.vendorCode,
                         vendor.vendorName,
+                        vendor.vendorCode,
                         po.deliveryDate,
                         po.poStatus,
-                        po.etc
+                        po.etc,
+                        po.createdDate
                         )
                 )
                 .from(po)
@@ -58,11 +59,12 @@ public class PoRepositoryImpl extends QuerydslRepositorySupport implements PoRep
         List<PoResponse> content = queryFactory
                 .select(new QPoResponse(
                         po.id,
-                        vendor.vendorCode,
                         vendor.vendorName,
+                        vendor.vendorCode,
                         po.deliveryDate,
                         po.poStatus,
-                        po.etc
+                        po.etc,
+                        po.createdDate
                       ))
                 .from(po)
                 .where(

@@ -13,6 +13,7 @@ import java.math.BigDecimal;
 public class PoItem extends BaseEntity {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name="po_item_id", comment = "발주라인번호") // db테이블명_// pk컬럼명
     private Long poItemId;
 
@@ -33,5 +34,15 @@ public class PoItem extends BaseEntity {
 
     @Column(name = "amount", precision = 15, scale = 2, nullable = false, comment = "수량 * 가격 합계값")
     private BigDecimal amount;
+
+    public static PoItem of(Po po, Item item, Long quantity, BigDecimal unitPrice, BigDecimal amount) {
+        PoItem poItem = new PoItem();
+        poItem.po = po;
+        poItem.item = item;
+        poItem.quantity = quantity;
+        poItem.unitPrice = unitPrice;
+        poItem.amount = amount;
+        return poItem;
+    }
 
 }

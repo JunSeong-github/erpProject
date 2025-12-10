@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController("po")
-@RequestMapping("po")
+@RequestMapping("/po")
 @RequiredArgsConstructor
 public class PoController {
 
@@ -26,13 +26,13 @@ public class PoController {
 //        return ResponseEntity.ok(poList);
 //    }
 
-    @GetMapping("list")
+    @GetMapping("/list")
     public ResponseEntity<Page<PoResponse>> list(PoSearchCondition poSearchCondition, Pageable pageable) {
         Page<PoResponse> List = poService.findSearchPageComplex(poSearchCondition, pageable);
         return ResponseEntity.ok(List);
     }
 
-    @PostMapping("/Po")
+    @PostMapping("/create")
     public ResponseEntity<?> create(@RequestBody PoCreateRequest poCreateRequest) {
         Po save = poService.save(poCreateRequest);
         return ResponseEntity.ok(save);

@@ -105,16 +105,16 @@ export default function PoCreatePage() {
             etc: etc,
             lines: lines.map((line) => ({
                 itemId: String(line.itemId),     // 백엔드가 String이면 이렇게
-                qty: String(line.quantity),      // POLineRequest.qty 가 String이면
+                quantity: String(line.quantity),      // POLineRequest.qty 가 String이면
                 unitPrice: String(line.unitPrice),
-                // total은 서버에서 다시 계산 가능하니까 굳이 안 보내도 됨
+                amount: String(line.amount),
             })),
         };
 
         try {
             setIsSaving(true);
-            //주소쪽 수정하고 save 어떻게 되는지 보기 
-            const res = await fetch("/api/po", {
+            const baseUrl = import.meta.env.VITE_API_BASE;
+            const res = await fetch(`${baseUrl}/po/create`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
