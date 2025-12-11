@@ -1,5 +1,6 @@
 package erp.backEnd.repository;
 
+import erp.backEnd.dto.po.PoCreateRequest;
 import erp.backEnd.dto.po.PoResponse;
 import erp.backEnd.dto.po.PoSearchCondition;
 import erp.backEnd.entity.Po;
@@ -13,4 +14,6 @@ public interface PoRepositoryCustom {
     List<PoResponse> search();
 //    List<PoResponse> basicSelect();
     Page<PoResponse> searchPageComplex(PoSearchCondition condition, Pageable pageable);
+
+    Po findDetail(Long id);
 }

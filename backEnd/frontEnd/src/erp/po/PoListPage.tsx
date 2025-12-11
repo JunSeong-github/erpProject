@@ -1,7 +1,7 @@
 
 import { useState } from "react";
-import { useQuery, keepPreviousData } from "@tanstack/react-query";
-import { listPo, PageResp, Po } from "../api";
+import { useQuery, keepPreviousData, useMutation, useQueryClient  } from "@tanstack/react-query";
+import { listPo, PageResp, Po, approvePo } from "../api";
 import { Link, useNavigate } from "react-router-dom";
 
 export default function PoListPage() {
@@ -13,6 +13,19 @@ export default function PoListPage() {
         queryKey: ["po", page],
         queryFn: () => listPo({ page, size: pageSize }),
         placeholderData: keepPreviousData,
+    });
+
+    const queryClient = useQueryClient();
+
+    const approveMutation = useMutation({
+        mutationFn: (id: number) => approvePo(id),
+        onSuccess: () => {
+            // 목록 다시 불러오기
+            queryClient.invalidateQueries({ queryKey: ["po"] });
+        },
+        onError: (err: unknown) => {
+            alert((err as Error).message ?? "승인 중 오류 발생");
+        },
     });
 
     const poList = data?.content ?? [];
@@ -74,7 +87,7 @@ export default function PoListPage() {
                                     {po.deliveryDate}
                                 </td>
                                 <td style={{ border: "1px solid #ccc", padding: "4px" }}>
-                                    {po.poStatus}
+                                    {po.poStatusLabel}
                                 </td>
                                 <td style={{ border: "1px solid #ccc", padding: "4px" }}>
                                     {po.etc}
@@ -90,6 +103,18 @@ export default function PoListPage() {
                                     >
                                         상세보기
                                     </button>
+
+                                    {/* DRAFT일 때만 승인 버튼 노출 */}
+                                    {po.poStatus === "DRAFT" && (
+                                        <button
+                                            type="button"
+                                            onClick={() => approveMutation.mutate(po.id)}
+                                            disabled={approveMutation.isPending}
+                                            style={{ padding: "4px 8px", cursor: "pointer" }}
+                                        >
+                                            {approveMutation.isPending ? "승인 중..." : "승인"}
+                                        </button>
+                                    )}
                                 </td>
                             </tr>
                         ))}

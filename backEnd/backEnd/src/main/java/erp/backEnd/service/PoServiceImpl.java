@@ -16,6 +16,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -40,6 +41,7 @@ public class PoServiceImpl implements PoService{
 
    public Po save(PoCreateRequest req) {
 
+//       return poRepository.poSave(req);
        Vendor vendor = vendorRepository.findByVendorCode(req.getVendorCode())
                .orElseThrow(() -> new IllegalArgumentException("공급사 없음"));
 
@@ -50,7 +52,7 @@ public class PoServiceImpl implements PoService{
                PoStatus.valueOf("DRAFT"),
                req.getEtc()
        );
-       
+
        //pk가져오깅
        Po savedPo = poRepository.save(po);
 
@@ -82,7 +84,71 @@ public class PoServiceImpl implements PoService{
 
        return savedPo;
 
-//       Po po = Po.of(poCreateRequest.getDeliveryDate(), poCreateRequest.getPoStatus());
-//       return poRepository.save(po);
    }
+
+    @Transactional
+    @Override
+    public void approve(Long poId) {
+        Po po = poRepository.findById(poId)
+                .orElseThrow(() -> new IllegalArgumentException("PO 없음: " + poId));
+
+        if (po.getPoStatus() != PoStatus.DRAFT) {
+            throw new IllegalStateException("DRAFT 상태만 승인 가능합니다.");
+        }
+
+        po.approve();
+
+    }
+    @Override
+    @Transactional(readOnly = true)
+    public PoResponse getDetail(Long id) {
+        Po po = poRepository.findDetail(id);
+        if (po == null) {
+            throw new IllegalArgumentException("발주를 찾을 수 없습니다. id=" + id);
+        }
+
+        return PoResponse.from(po);
+    }
+
+    // 🔹 수정 저장
+    @Override
+    @Transactional
+    public void update(Long id, PoCreateRequest req) {
+
+        // 1) 기존 PO 조회
+        Po po = poRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("PO를 찾을 수 없습니다. id=" + id));
+
+        // 2) 공급사 코드로 Vendor 조회
+        Vendor vendor = vendorRepository.findByVendorCode(req.getVendorCode())
+                .orElseThrow(() -> new IllegalArgumentException("공급사 없음"));
+
+        // 수정
+        po.updateFrom(req, vendor);
+
+        // 4) 기존 라인 삭제
+        poItemRepository.deleteByPo(po);
+
+        // 5) 새 라인 생성
+        if (req.getLines() != null && !req.getLines().isEmpty()) {
+
+            List<PoItem> poItems = req.getLines().stream()
+                    .map(lineReq -> {
+                        // itemId는 프론트에서 String으로 보내고 있음
+                        Long itemId = Long.valueOf(lineReq.getItemId());
+
+                        Item item = itemRepository.getReferenceById(itemId);
+
+                        Long quantity = Long.valueOf(lineReq.getQuantity());
+                        BigDecimal unitPrice = lineReq.getUnitPrice();
+                        BigDecimal amount = lineReq.getAmount();
+
+                        return PoItem.of(po, item, quantity, unitPrice, amount);
+                    })
+                    .toList();
+
+            poItemRepository.saveAll(poItems);
+        }
+    }
+
 }

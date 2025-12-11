@@ -1,5 +1,6 @@
 package erp.backEnd.entity;
 
+import erp.backEnd.dto.po.PoCreateRequest;
 import erp.backEnd.enumeration.PoStatus;
 import jakarta.persistence.*;
 import lombok.*;
@@ -49,5 +50,24 @@ public class Po extends BaseEntity {
         po.poStatus = poStatus;
         po.etc = etc;
         return po;
+    }
+
+    public void approve() {
+        if (this.poStatus != PoStatus.DRAFT) {
+            throw new IllegalStateException("DRAFT 상태만 승인 가능합니다.");
+        }
+        this.poStatus = PoStatus.APPROVED;
+    }
+
+    public void updateFrom(PoCreateRequest req, Vendor vendor) {
+        if (this.poStatus == PoStatus.COMPLETED) {
+            throw new IllegalStateException("완료된 발주는 수정할 수 없습니다.");
+        }
+
+        this.vendor = vendor;
+        this.deliveryDate = req.getDeliveryDate();
+//        this.poStatus = req.getPoStatus();
+        this.etc = req.getEtc();
+
     }
 }

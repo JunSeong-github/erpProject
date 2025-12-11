@@ -1,6 +1,7 @@
 package erp.backEnd.dto.po;
 
 import com.querydsl.core.annotations.QueryProjection;
+import erp.backEnd.entity.Po;
 import erp.backEnd.enumeration.PoStatus;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -20,7 +21,7 @@ public class PoResponse {
     private String etc;
     private LocalDateTime createDate;
 
-    private List<PoItemResponse> items;  // 발주 품목 리스트
+    private List<PoItemResponse> lines;  // 발주 품목 리스트
 
     @QueryProjection
     public PoResponse(Long id, String vendorName, String vendorCode, LocalDate deliveryDate, PoStatus poStatus, String etc, LocalDateTime createDate) {
@@ -31,5 +32,28 @@ public class PoResponse {
         this.poStatus = poStatus;
         this.etc = etc;
         this.createDate = createDate;
+    }
+
+    public String getPoStatusLabel() {
+        return poStatus != null ? poStatus.getLabel() : null;
+    }
+
+    public static PoResponse from(Po po) {
+        PoResponse dto = new PoResponse(
+                po.getId(),
+                po.getVendor().getVendorName(),
+                po.getVendor().getVendorCode(),
+                po.getDeliveryDate(),
+                po.getPoStatus(),
+                po.getEtc(),
+                po.getCreatedDate()
+        );
+
+        List<PoItemResponse> lines = po.getPoItems().stream()
+                .map(PoItemResponse::from)
+                .toList();
+
+        dto.setLines(lines);
+        return dto;
     }
 }

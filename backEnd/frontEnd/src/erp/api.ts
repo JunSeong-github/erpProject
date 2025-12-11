@@ -38,6 +38,7 @@ export type Po = {
     vendorCode: string;
     deliveryDate: string; // LocalDate → "yyyy-MM-dd"
     poStatus: string;
+    poStatusLabel: string;  // "발주요청"
     etc: string;
     createDate: string;  // BaseTimeEntity에서 온 값
 }
@@ -62,3 +63,25 @@ export async function listPo(params: { page: number; size: number }) {
 
 /** 발주 목록 조회 */
 
+/** 발주 승인 */
+export async function approvePo(id: number) {
+    const baseUrl = import.meta.env.VITE_API_BASE;
+    const res = await fetch(`${baseUrl}/po/${id}/approve`, {
+        method: "POST",
+    });
+
+    if (!res.ok) {
+        const text = await res.text();
+        throw new Error(text || "승인 실패");
+    }
+}
+/** 발주 승인 */
+
+/** 발주 상세조회  */
+export async function getDetail(id: number) {
+    const baseUrl = import.meta.env.VITE_API_BASE;
+    const res = await fetch(`${baseUrl}/po/${id}`);
+    if (!res.ok) throw new Error("상세 조회 실패");
+    return res.json();
+}
+/** 발주 수정 */

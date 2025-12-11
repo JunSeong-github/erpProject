@@ -1,8 +1,11 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery} from "@tanstack/react-query";
 // import axios from "axios";
 
-import { listItems, listVendors, Item, Vendor } from "../api";
-import {useState} from "react";
+import { useParams } from "react-router-dom";
+
+import { listItems, listVendors, Item, Vendor, getDetail } from "../api";
+import {useEffect, useState} from "react";
+
 
 type PoLine = {
     itemId: number;
@@ -25,6 +28,34 @@ export default function PoCreatePage() {
         queryFn: listVendors,
         staleTime: 1000 * 60, // 1분 캐싱 (옵션)
     });
+
+    const { id } = useParams();
+    const isEdit = Boolean(id);
+
+    const { data: poDetail } = useQuery({
+        queryKey: ["poDetail", id],
+        queryFn: () => getDetail(Number(id)),
+        enabled: isEdit,  // id 있을 때만 호출
+    });
+
+    useEffect(() => {
+        if (!poDetail) return;
+
+        setVendorCode(poDetail.vendorCode);
+        setDeliveryDate(poDetail.deliveryDate);
+        setEtc(poDetail.etc || "");
+
+        // 라인 초기화
+        setLines(
+            poDetail.lines.map((l: any) => ({
+                itemId: Number(l.itemId),
+                unitPrice: Number(l.unitPrice),
+                quantity: Number(l.quantity),
+                amount: Number(l.amount),
+            }))
+        );
+
+    }, [poDetail]);
 
     //객체의 state를 저장 및 세팅하는것 꼭 필요함 없으면 데이터를 읽지못함
     const [vendorCode, setVendorCode] = useState("");
@@ -114,37 +145,41 @@ export default function PoCreatePage() {
         try {
             setIsSaving(true);
             const baseUrl = import.meta.env.VITE_API_BASE;
-            const res = await fetch(`${baseUrl}/po/create`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
+            // const res = await fetch(`${baseUrl}/po/create`, {
+            //     method: "POST",
+            //     headers: {
+            //         "Content-Type": "application/json",
+            //     },
+            //     body: JSON.stringify(payload),
+            // });
+
+            const url = isEdit
+                ? `${baseUrl}/po/${id}`       // 수정 API (PUT 또는 PATCH)
+                : `${baseUrl}/po/create`;     // 신규등록
+
+            const method = isEdit ? "PUT" : "POST";
+
+            const res = await fetch(url, {
+                method,
+                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(payload),
             });
 
-            if (!res.ok) {
-                const text = await res.text();
-                throw new Error(text || "저장 실패");
-            }
+            if (!res.ok) throw new Error(await res.text());
+            alert(isEdit ? "수정되었습니다." : "저장되었습니다.");
 
-            alert("저장되었습니다.");
-
-            // 3) 저장 성공 후 폼 초기화 (원하면)
-            // setVendorCode("");
-            // setDeliveryDate("");
-            // setEtc("");
-            // setLines([]);
         } catch (e) {
             console.error(e);
-            alert("저장 중 오류가 발생했습니다.");
+            alert("오류 발생");
         } finally {
             setIsSaving(false);
         }
     };
 
+
     return (
         <div>
-            <h2>발주 작성</h2>
+            <h2>{isEdit ? "발주 수정" : "발주 작성"}</h2>
 
             <div>
             <label>
@@ -248,9 +283,8 @@ export default function PoCreatePage() {
                 <button
                     type="button"
                     onClick={handleSave}
-                    disabled={isSaving}
                 >
-                    {isSaving ? "저장 중..." : "저장"}
+                    {isSaving ? "저장 중..." : isEdit ? "수정" : "저장"}
                 </button>
             </div>
 

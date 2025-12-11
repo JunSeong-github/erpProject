@@ -1,16 +1,13 @@
 package erp.backEnd.repository;
 
+import com.querydsl.core.Tuple;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import erp.backEnd.dto.member.FindMemberResponseDto;
 import erp.backEnd.dto.member.QFindMemberResponseDto;
-import erp.backEnd.dto.po.PoResponse;
-import erp.backEnd.dto.po.PoSearchCondition;
-import erp.backEnd.dto.po.QPoResponse;
-import erp.backEnd.entity.Po;
-import erp.backEnd.entity.QPo;
-import erp.backEnd.entity.QVendor;
+import erp.backEnd.dto.po.*;
+import erp.backEnd.entity.*;
 import erp.backEnd.enumeration.PoStatus;
 import erp.backEnd.repository.support.Querydsl4RepositorySupport;
 import jakarta.persistence.EntityManager;
@@ -21,9 +18,13 @@ import org.springframework.data.jpa.repository.support.QuerydslRepositorySupport
 import org.springframework.data.support.PageableExecutionUtils;
 import org.springframework.stereotype.Repository;
 
+import java.math.BigDecimal;
 import java.util.List;
+import java.util.Objects;
 
+import static erp.backEnd.entity.QItem.item;
 import static erp.backEnd.entity.QPo.po;
+import static erp.backEnd.entity.QPoItem.poItem;
 import static erp.backEnd.entity.QVendor.*;
 import static org.springframework.util.StringUtils.isEmpty;
 
@@ -107,8 +108,20 @@ public class PoRepositoryImpl extends QuerydslRepositorySupport implements PoRep
         return isEmpty(poStatus) ? null : po.poStatus.eq(poStatus);
     }
 
+    @Override
+    public Po findDetail(Long id) {
 
+        // 1) 헤더 + 라인 + 품목 한 번에 조회 (fetch join 형태)
 
+        return queryFactory
+                .selectFrom(po)
+                .join(po.vendor, vendor).fetchJoin()
+                .leftJoin(po.poItems, poItem).fetchJoin()    // ← 여기 컬렉션 필드명에 맞게 수정 (예: po.poItems)
+                .leftJoin(poItem.item, item).fetchJoin()
+                .where(po.id.eq(id))
+                .fetchOne();
+
+    }
 
 
 }

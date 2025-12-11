@@ -15,5 +15,11 @@ public interface PoService {
 
     Page<PoResponse> findSearchPageComplex(PoSearchCondition condition, Pageable pageable);
 
-    public Po save(PoCreateRequest poCreateRequest);
+    Po save(PoCreateRequest poCreateRequest);
+
+    void approve(Long poId);
+
+    PoResponse getDetail(Long id);
+
+    void update(Long id, PoCreateRequest req);
 }

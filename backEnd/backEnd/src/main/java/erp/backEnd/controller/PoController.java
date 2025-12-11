@@ -38,4 +38,26 @@ public class PoController {
         return ResponseEntity.ok(save);
     }
 
+    @PostMapping("/{id}/approve")
+    public ResponseEntity<Void> approve(@PathVariable Long id) {
+        poService.approve(id);
+        return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<PoResponse> getDetail(@PathVariable Long id) {
+        PoResponse response = poService.getDetail(id);
+        return ResponseEntity.ok(response);
+    }
+
+    // 수정 저장
+    @PutMapping("/{id}")
+    public ResponseEntity<Void> update(
+            @PathVariable Long id,
+            @RequestBody PoCreateRequest poCreateRequest
+    ) {
+        poService.update(id, poCreateRequest);
+        return ResponseEntity.ok().build();
+    }
+
 }
