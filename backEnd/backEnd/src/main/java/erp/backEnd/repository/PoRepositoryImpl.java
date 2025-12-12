@@ -48,7 +48,8 @@ public class PoRepositoryImpl extends QuerydslRepositorySupport implements PoRep
                         po.deliveryDate,
                         po.poStatus,
                         po.etc,
-                        po.createdDate
+                        po.createdDate,
+                        po.rejectReason
                         )
                 )
                 .from(po)
@@ -65,13 +66,15 @@ public class PoRepositoryImpl extends QuerydslRepositorySupport implements PoRep
                         po.deliveryDate,
                         po.poStatus,
                         po.etc,
-                        po.createdDate
+                        po.createdDate,
+                        po.rejectReason
                       ))
                 .from(po)
                 .where(
                         vendorNameEq(condition.getVendorName()),
                         vendorCodeEq(condition.getVendorCode()),
                         poStatusEq(condition.getPoStatus()))
+                .orderBy(po.createdDate.desc())
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
                 .fetch();

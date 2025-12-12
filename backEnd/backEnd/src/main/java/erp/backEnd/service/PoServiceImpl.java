@@ -151,4 +151,31 @@ public class PoServiceImpl implements PoService{
         }
     }
 
+    @Override
+    @Transactional
+    public void delete(Long id) {
+        Po po = poRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("PO 없음: " + id));
+
+        // DRAFT만 삭제 가능(원하면 룰 바꿔도 됨)
+        if (po.getPoStatus() != PoStatus.DRAFT) {
+            throw new IllegalStateException("DRAFT 상태만 삭제 가능합니다.");
+        }
+
+        // 방법 A: 라인 먼저 삭제 후 헤더 삭제
+        poItemRepository.deleteByPo(po);
+        poRepository.delete(po);
+
+        // 방법 B(추천): 엔티티에 cascade + orphanRemoval 설정돼 있으면 poRepository.delete(po)만으로 끝
+    }
+
+    @Override
+    @Transactional
+    public void reject(Long id, String reason) {
+        Po po = poRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("PO 없음: " + id));
+
+        po.reject(reason); // ✅ 도메인 메서드
+    }
+
 }

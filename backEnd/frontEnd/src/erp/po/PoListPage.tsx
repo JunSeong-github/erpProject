@@ -2,12 +2,24 @@
 import { useState } from "react";
 import { useQuery, keepPreviousData, useMutation, useQueryClient  } from "@tanstack/react-query";
 import { listPo, PageResp, Po, approvePo } from "../api";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 
 export default function PoListPage() {
     // 화면에서 보이는 페이지는 1부터, 서버에는 0부터 보내기
-    const [page, setPage] = useState(0);
+    // const [page, setPage] = useState(0);
+    const [searchParams, setSearchParams] = useSearchParams();
+
+// URL에서 page 읽기 (없으면 0)
+    const initialPage = Math.max(Number(searchParams.get("page") ?? "0"), 0);
+
+// page 상태
+    const [page, setPage] = useState(initialPage);
     const pageSize = 10;
+
+    const setPageAndSync = (next: number) => {
+        setPage(next);
+        setSearchParams({ page: String(next) });
+    };
 
     const { data, isLoading, isError, error } = useQuery<PageResp<Po>>({
         queryKey: ["po", page],
@@ -98,7 +110,7 @@ export default function PoListPage() {
                                 <td style={{ border: "1px solid #ccc", padding: "4px" }}>
                                     <button
                                         type="button"
-                                        onClick={() => navigate(`/erp/po/${po.id}`)}
+                                        onClick={() => navigate(`/erp/po/${po.id}`, { state: { page } })}
                                         style={{ padding: "4px 8px", cursor: "pointer" }}
                                     >
                                         상세보기
@@ -125,8 +137,8 @@ export default function PoListPage() {
                     <div style={{ marginTop: "10px", display: "flex", gap: "8px", alignItems: "center" }}>
                         <button
                             type="button"
-                            onClick={() => setPage((p) => Math.max(p - 1, 0))}
                             disabled={currentPage === 0}
+                            onClick={() => setPageAndSync(Math.max(page - 1, 0))}
                         >
                             이전
                         </button>
@@ -140,11 +152,10 @@ export default function PoListPage() {
 
                         <button
                             type="button"
-                            onClick={() =>
-                                setPage((p) =>
-                                    data ? Math.min(p + 1, data.totalPages - 1) : p
-                                )
-                            }
+                            onClick={() => {
+                                const next = data ? Math.min(page + 1, data.totalPages - 1) : page;
+                                setPageAndSync(next);
+                            }}
                             disabled={data ? currentPage >= totalPages - 1 : true}
                         >
                             다음

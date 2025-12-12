@@ -36,6 +36,9 @@ public class Po extends BaseEntity {
     @Column(comment = "비고")
     private String etc;
 
+    @Column(comment = "반려사유")
+    private String rejectReason;
+
     @OneToMany(mappedBy = "po") // 일대다관계 이런식으로 매칭되어있는경우에는 fk없는쪽에 mappedby해준다
     private List<PoItem> poItems = new ArrayList<>();
 
@@ -59,9 +62,20 @@ public class Po extends BaseEntity {
         this.poStatus = PoStatus.APPROVED;
     }
 
+    public void reject(String reason) {
+        if (this.poStatus != PoStatus.DRAFT) {
+            throw new IllegalStateException("DRAFT 상태만 반려 가능합니다.");
+        }
+        if (reason == null || reason.trim().isEmpty()) {
+            throw new IllegalArgumentException("반려 사유는 필수입니다.");
+        }
+        this.rejectReason = reason.trim();
+        this.poStatus = PoStatus.REJECTED;
+    }
+
     public void updateFrom(PoCreateRequest req, Vendor vendor) {
-        if (this.poStatus == PoStatus.COMPLETED) {
-            throw new IllegalStateException("완료된 발주는 수정할 수 없습니다.");
+        if (this.poStatus != PoStatus.DRAFT) {
+            throw new IllegalStateException("승인된 발주는 수정할 수 없습니다.");
         }
 
         this.vendor = vendor;

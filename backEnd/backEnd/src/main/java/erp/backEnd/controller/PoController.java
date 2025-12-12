@@ -1,6 +1,7 @@
 package erp.backEnd.controller;
 
 import erp.backEnd.dto.po.PoCreateRequest;
+import erp.backEnd.dto.po.PoRejectRequest;
 import erp.backEnd.dto.po.PoResponse;
 import erp.backEnd.dto.po.PoSearchCondition;
 import erp.backEnd.entity.Po;
@@ -41,6 +42,18 @@ public class PoController {
     @PostMapping("/{id}/approve")
     public ResponseEntity<Void> approve(@PathVariable Long id) {
         poService.approve(id);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/{id}/reject")
+    public ResponseEntity<Void> reject(@PathVariable Long id, @RequestBody PoRejectRequest req) {
+        poService.reject(id, req.getReason());
+        return ResponseEntity.ok().build();
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
+        poService.delete(id);
         return ResponseEntity.ok().build();
     }
 

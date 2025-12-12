@@ -20,11 +20,12 @@ public class PoResponse {
     private PoStatus poStatus;      // 발주 상태
     private String etc;
     private LocalDateTime createDate;
+    private String rejectReason;
 
     private List<PoItemResponse> lines;  // 발주 품목 리스트
 
     @QueryProjection
-    public PoResponse(Long id, String vendorName, String vendorCode, LocalDate deliveryDate, PoStatus poStatus, String etc, LocalDateTime createDate) {
+    public PoResponse(Long id, String vendorName, String vendorCode, LocalDate deliveryDate, PoStatus poStatus, String etc, LocalDateTime createDate, String rejectReason) {
         this.id = id;
         this.vendorName = vendorName;
         this.vendorCode = vendorCode;
@@ -32,6 +33,7 @@ public class PoResponse {
         this.poStatus = poStatus;
         this.etc = etc;
         this.createDate = createDate;
+        this.rejectReason = rejectReason;
     }
 
     public String getPoStatusLabel() {
@@ -46,7 +48,8 @@ public class PoResponse {
                 po.getDeliveryDate(),
                 po.getPoStatus(),
                 po.getEtc(),
-                po.getCreatedDate()
+                po.getCreatedDate(),
+                po.getRejectReason()
         );
 
         List<PoItemResponse> lines = po.getPoItems().stream()

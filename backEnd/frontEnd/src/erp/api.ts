@@ -77,6 +77,23 @@ export async function approvePo(id: number) {
 }
 /** 발주 승인 */
 
+/** 발주 반려 */
+
+export async function rejectPo(poId: number, reason: string){
+    const baseUrl = import.meta.env.VITE_API_BASE;
+    const res = await fetch(`${baseUrl}/po/${poId}/reject`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reason: reason }),
+    });
+    if (!res.ok) {
+        const text = await res.text();
+        throw new Error(text || "반려 실패");
+    }
+}
+
+/** 발주 반려 */
+
 /** 발주 상세조회  */
 export async function getDetail(id: number) {
     const baseUrl = import.meta.env.VITE_API_BASE;

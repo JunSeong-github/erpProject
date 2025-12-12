@@ -1,9 +1,8 @@
-import { useQuery} from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient} from "@tanstack/react-query";
 // import axios from "axios";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 
-import { useParams } from "react-router-dom";
-
-import { listItems, listVendors, Item, Vendor, getDetail } from "../api";
+import { listItems, listVendors, Item, Vendor, getDetail, approvePo, rejectPo } from "../api";
 import {useEffect, useState} from "react";
 
 
@@ -31,6 +30,24 @@ export default function PoCreatePage() {
 
     const { id } = useParams();
     const isEdit = Boolean(id);
+    const navigate = useNavigate();
+    const location = useLocation();
+    const fromPage = (location.state as any)?.page ?? 0;
+
+    const goList = () => navigate(`/erp/po?page=${fromPage}`);
+
+    const queryClient = useQueryClient();
+
+    //객체의 state를 저장 및 세팅하는것 꼭 필요함 없으면 데이터를 읽지못함
+    const [vendorCode, setVendorCode] = useState("");
+    const [deliveryDate, setDeliveryDate] = useState("");
+    const [etc, setEtc] = useState("");
+    const [showRejectBox, setShowRejectBox] = useState(false);
+    const [rejectReason, setRejectReason] = useState("");
+
+    const [lines, setLines] = useState<PoLine[]>([]);
+
+    const [isSaving, setIsSaving] = useState(false);
 
     const { data: poDetail } = useQuery({
         queryKey: ["poDetail", id],
@@ -38,12 +55,22 @@ export default function PoCreatePage() {
         enabled: isEdit,  // id 있을 때만 호출
     });
 
+    const modified =
+        poDetail?.deliveryDate && poDetail?.poStatus === "DRAFT";
+
+    const isEditable =
+        poDetail?.deliveryDate && poDetail?.poStatus != "DRAFT";
+
+    const isDraft = poDetail?.poStatus === "DRAFT";
+    const isRejected = poDetail?.poStatus === "REJECTED";
+
     useEffect(() => {
         if (!poDetail) return;
 
         setVendorCode(poDetail.vendorCode);
         setDeliveryDate(poDetail.deliveryDate);
         setEtc(poDetail.etc || "");
+        setRejectReason(poDetail.rejectReason ?? "");
 
         // 라인 초기화
         setLines(
@@ -57,21 +84,16 @@ export default function PoCreatePage() {
 
     }, [poDetail]);
 
-    //객체의 state를 저장 및 세팅하는것 꼭 필요함 없으면 데이터를 읽지못함
-    const [vendorCode, setVendorCode] = useState("");
-    const [deliveryDate, setDeliveryDate] = useState("");
-    const [etc, setEtc] = useState("");
-
-    const [lines, setLines] = useState<PoLine[]>([]);
-
-    const [isSaving, setIsSaving] = useState(false);
-
     // 라인 추가 버튼
     const addLine = () => {
         setLines((prev) => [
             ...prev,
             { itemId: 0, unitPrice: 0, quantity: 0, amount: 0 },
         ]);
+    };
+
+    const removeLine = (index: number) => {
+        setLines((prev) => prev.filter((_, i) => i !== index));
     };
 
     //  각 라인의 값 변경 처리
@@ -145,13 +167,6 @@ export default function PoCreatePage() {
         try {
             setIsSaving(true);
             const baseUrl = import.meta.env.VITE_API_BASE;
-            // const res = await fetch(`${baseUrl}/po/create`, {
-            //     method: "POST",
-            //     headers: {
-            //         "Content-Type": "application/json",
-            //     },
-            //     body: JSON.stringify(payload),
-            // });
 
             const url = isEdit
                 ? `${baseUrl}/po/${id}`       // 수정 API (PUT 또는 PATCH)
@@ -167,12 +182,66 @@ export default function PoCreatePage() {
 
             if (!res.ok) throw new Error(await res.text());
             alert(isEdit ? "수정되었습니다." : "저장되었습니다.");
+            if(!isEdit) goList();
 
         } catch (e) {
             console.error(e);
             alert("오류 발생");
         } finally {
             setIsSaving(false);
+        }
+    };
+
+    const handleDelete = async () => {
+        if (!id) return;
+
+        const ok = confirm("정말로 이 발주를 삭제할까요?");
+        if (!ok) return;
+
+        try {
+            const baseUrl = import.meta.env.VITE_API_BASE;
+            const res = await fetch(`${baseUrl}/po/${id}`, { method: "DELETE" });
+
+            if (!res.ok) throw new Error(await res.text());
+
+            alert("삭제되었습니다.");
+            // 삭제 후 목록으로 이동 (원하는 경로로)
+            goList();
+        } catch (e) {
+            console.error(e);
+            alert("삭제 중 오류 발생");
+        }
+    };
+
+    const approveMutation = useMutation({
+        mutationFn: (poId: number) => approvePo(poId),
+        onSuccess: async () => {
+            alert("승인되었습니다.");
+            // ✅ 상세 데이터 다시 불러오기
+            await queryClient.invalidateQueries({ queryKey: ["poDetail", id] });
+            // ✅ 목록도 최신화(목록에서 승인 상태 바로 보이게)
+            await queryClient.invalidateQueries({ queryKey: ["po"] });
+        },
+        onError: (err: unknown) => {
+            alert((err as Error).message ?? "승인 중 오류 발생");
+        },
+    });
+
+    const handleReject = async () => {
+        if (!id) return;
+
+        if (!rejectReason.trim()) {
+            alert("반려 사유를 입력해주세요.");
+            return;
+        }
+
+        try {
+            await rejectPo(Number(id), rejectReason);
+            alert("반려 처리되었습니다.");
+            goList();
+        } catch (e) {
+            console.error(e);
+            alert("반려 처리 중 오류가 발생했습니다.");
         }
     };
 
@@ -186,6 +255,7 @@ export default function PoCreatePage() {
                 공급사정보 :&nbsp;
                 <select style={{width:"100px"}}
                         value={vendorCode}
+                        disabled={isEditable}
                         onChange={(e) => setVendorCode(e.target.value)}
                 >
                     <option value="">선택</option>
@@ -201,6 +271,7 @@ export default function PoCreatePage() {
                 &nbsp;납기 요청일 :&nbsp;
                 <input
                     type="date"
+                    readOnly={isEditable}
                     value={deliveryDate}
                     onChange={(e) => setDeliveryDate(e.target.value)}
                 />
@@ -210,6 +281,7 @@ export default function PoCreatePage() {
                     &nbsp;비고:&nbsp;
                     <input
                         type="text"
+                        readOnly={isEditable}
                         value={etc}
                         style={{ width: "80px" }}
                         onChange={(e) => setEtc(e.target.value)}
@@ -218,9 +290,11 @@ export default function PoCreatePage() {
 
             </div>
 
+            {(!isEdit || modified) && (
             <div>
                 <button type="button" onClick={addLine}>라인 추가</button>
             </div>
+            )}
             {/* 🔹 라인 반복 렌더링 */}
             <div>
                 {lines.map((line, index) => (
@@ -230,6 +304,7 @@ export default function PoCreatePage() {
                             품목 선택:&nbsp;
                             <select
                                 style={{ width: "150px" }}
+                                disabled={isEditable}
                                 value={line.itemId}
                                 onChange={(e) => updateLine(index, "itemId", e.target.value)}
                             >
@@ -259,6 +334,7 @@ export default function PoCreatePage() {
                             &nbsp;수량:&nbsp;
                             <input
                                 type="number"
+                                readOnly={isEditable}
                                 value={line.quantity === 0 ? "" : line.quantity}
                                 onChange={(e) => updateLine(index, "quantity", e.target.value)}
                                 style={{ width: "80px" }}
@@ -275,10 +351,33 @@ export default function PoCreatePage() {
                                 style={{ width: "100px", background: "#eee" }}
                             />
                         </label>
+
+                        {modified && (
+                            <button
+                                type="button"
+                                onClick={() => removeLine(index)}
+                                style={{ marginLeft: "8px" }}
+                            >
+                                라인 삭제
+                            </button>
+                        )}
                     </div>
                 ))}
             </div>
 
+            {isRejected && (
+                <div style={{ marginTop: "16px", padding: "12px", border: "1px solid #f00" }}>
+                    <div style={{ fontWeight: 700, marginBottom: "6px" }}>반려 사유</div>
+                    <div style={{ whiteSpace: "pre-wrap" }}>
+                        {poDetail?.rejectReason || "(사유 없음)"}
+                    </div>
+                    <div style={{ marginTop: "10px", fontWeight: 700 }}>
+                        반려된 건임으로 확인 후 재 발주 작성 부탁드립니다
+                    </div>
+                </div>
+            )}
+
+            {(!isEdit || modified) && (
             <div>
                 <button
                     type="button"
@@ -287,6 +386,69 @@ export default function PoCreatePage() {
                     {isSaving ? "저장 중..." : isEdit ? "수정" : "저장"}
                 </button>
             </div>
+            )}
+
+            {modified && (
+                <div style={{ marginTop: "12px" }}>
+                    <button type="button" onClick={handleDelete}>
+                        발주 삭제
+                    </button>
+                </div>
+            )}
+
+            {modified && (
+                <div style={{ marginTop: "12px" }}>
+                    <button
+                        type="button"
+                        onClick={() => approveMutation.mutate(Number(id))}
+                        disabled={approveMutation.isPending}
+                    >
+                        {approveMutation.isPending ? "승인 중..." : "승인"}
+                    </button>
+                </div>
+            )}
+
+            {isEdit && isDraft && (
+                <div style={{ marginTop: "12px" }}>
+                    {!showRejectBox ? (
+                        <button type="button" onClick={() => setShowRejectBox(true)}>
+                            반려
+                        </button>
+                    ) : (
+                        <div style={{ marginTop: "8px" }}>
+                            <div style={{ marginBottom: "6px" }}>
+          <textarea
+              placeholder="반려 사유를 입력하세요"
+              value={rejectReason}
+              onChange={(e) => setRejectReason(e.target.value)}
+              rows={4}
+              style={{ width: "100%" }}
+          />
+                            </div>
+                            <button type="button" onClick={handleReject}>
+                                반려 확정
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setShowRejectBox(false);
+                                    setRejectReason("");
+                                }}
+                                style={{ marginLeft: "8px" }}
+                            >
+                                취소
+                            </button>
+                        </div>
+                    )}
+                </div>
+            )}
+
+            <button
+                type="button"
+                onClick={() => navigate(`/erp/po?page=${fromPage}`)}
+            >
+                목록으로
+            </button>
 
         </div>
     );

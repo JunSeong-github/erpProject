@@ -22,4 +22,9 @@ public interface PoService {
     PoResponse getDetail(Long id);
 
     void update(Long id, PoCreateRequest req);
+
+    void delete(Long id);
+
+    void reject(Long id, String reason);
+
 }
