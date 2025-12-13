@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Getter
@@ -34,6 +36,9 @@ public class PoItem extends BaseEntity {
 
     @Column(name = "amount", precision = 15, scale = 2, nullable = false, comment = "수량 * 가격 합계값")
     private BigDecimal amount;
+
+    @OneToMany(mappedBy = "poItem", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ReceiptLine> receiptLines = new ArrayList<>();
 
     public static PoItem of(Po po, Item item, Long quantity, BigDecimal unitPrice, BigDecimal amount) {
         PoItem poItem = new PoItem();

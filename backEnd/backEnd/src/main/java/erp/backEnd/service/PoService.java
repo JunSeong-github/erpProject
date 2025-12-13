@@ -27,4 +27,6 @@ public interface PoService {
 
     void reject(Long id, String reason);
 
+    void startReceiving(Long poId);
+
 }

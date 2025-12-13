@@ -6,6 +6,8 @@ import AppLayout from "./AppLayout";
 // import PoListPage from "../erp/po/PoListPage";
 import PoCreatePage from "../erp/po/PoCreatePage";
 import PoListPage from "../erp/po/PoListPage";
+import ReceiptCreatePage from "../erp/receipt/ReceiptCreatePage";
+
 
 export const router = createBrowserRouter([
     {
@@ -17,6 +19,7 @@ export const router = createBrowserRouter([
             { path: "/erp/po", element: <PoListPage /> },
             { path: "/erp/po/new", element: <PoCreatePage /> },
             { path: "/erp/po/:id", element: <PoCreatePage /> },
+            { path: "/erp/receipt/:id", element: <ReceiptCreatePage /> },
             { path: "*", element: <Navigate to="/" replace /> },          // 안전망
         ],
     },

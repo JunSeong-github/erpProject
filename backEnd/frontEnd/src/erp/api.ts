@@ -1,5 +1,7 @@
 import { api } from "../lib/axios";
 
+const baseUrl = import.meta.env.VITE_API_BASE;
+
 export interface PageResp<T> {
     content: T[];
     totalElements: number;
@@ -51,7 +53,6 @@ export async function listPo(params: { page: number; size: number }) {
         // sort: "deliveryDate,desc", // 정렬 넣고 싶으면 여기
     });
 
-    const baseUrl = import.meta.env.VITE_API_BASE;
     const res = await fetch(`${baseUrl}/po/list?${query.toString()}`);
     if (!res.ok) {
         const text = await res.text();
@@ -65,7 +66,6 @@ export async function listPo(params: { page: number; size: number }) {
 
 /** 발주 승인 */
 export async function approvePo(id: number) {
-    const baseUrl = import.meta.env.VITE_API_BASE;
     const res = await fetch(`${baseUrl}/po/${id}/approve`, {
         method: "POST",
     });
@@ -80,7 +80,6 @@ export async function approvePo(id: number) {
 /** 발주 반려 */
 
 export async function rejectPo(poId: number, reason: string){
-    const baseUrl = import.meta.env.VITE_API_BASE;
     const res = await fetch(`${baseUrl}/po/${poId}/reject`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -96,9 +95,39 @@ export async function rejectPo(poId: number, reason: string){
 
 /** 발주 상세조회  */
 export async function getDetail(id: number) {
-    const baseUrl = import.meta.env.VITE_API_BASE;
     const res = await fetch(`${baseUrl}/po/${id}`);
     if (!res.ok) throw new Error("상세 조회 실패");
     return res.json();
 }
 /** 발주 수정 */
+
+/** 입고진행 */
+export async function startReceiving(poId: number) {
+    const res = await fetch(`${baseUrl}/po/startReceiving/${poId}`, { method: "POST" });
+    if (!res.ok) throw new Error(await res.text());
+}
+/** 입고진행 */
+
+/** 입고등록 */
+export type ReceiptLineCreateRequest = {
+    poItemId: number;
+    receivedQty: number;
+    lineRemark?: string;
+};
+
+export type ReceiptCreateRequest = {
+    receiptDate?: string; // YYYY-MM-DD
+    remark?: string;
+    lines: ReceiptLineCreateRequest[];
+};
+
+export async function createReceipt(poId: number, req: ReceiptCreateRequest) {
+    const res = await fetch(`${baseUrl}/receipt/create/${poId}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(req),
+    });
+    if (!res.ok) throw new Error(await res.text());
+}
+/** 입고등록 */
+

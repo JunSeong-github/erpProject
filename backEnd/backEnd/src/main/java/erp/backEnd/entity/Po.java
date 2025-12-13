@@ -46,6 +46,9 @@ public class Po extends BaseEntity {
     @JoinColumn(name = "vendor_code")
     private Vendor vendor;
 
+    @OneToMany(mappedBy = "po", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Receipt> receipts = new ArrayList<>();
+
     public static Po of(Vendor vendor, LocalDate deliveryDate, PoStatus poStatus, String etc) {
         Po po = new Po();
         po.vendor = vendor;
@@ -73,6 +76,13 @@ public class Po extends BaseEntity {
         this.poStatus = PoStatus.REJECTED;
     }
 
+    public void startReceiving() {
+        if (this.poStatus != PoStatus.APPROVED) {
+            throw new IllegalStateException("APPROVED 상태만 입고 진행할 수 있습니다.");
+        }
+        this.poStatus = PoStatus.ORDERED;
+    }
+
     public void updateFrom(PoCreateRequest req, Vendor vendor) {
         if (this.poStatus != PoStatus.DRAFT) {
             throw new IllegalStateException("승인된 발주는 수정할 수 없습니다.");
@@ -84,4 +94,13 @@ public class Po extends BaseEntity {
         this.etc = req.getEtc();
 
     }
+
+    public void applyReceivingResult(boolean allMatched) {
+        if (allMatched) {
+            this.poStatus = PoStatus.RECEIVED;
+        } else {
+            this.poStatus = PoStatus.PARTIAL_RECEIVED;
+        }
+    }
+
 }

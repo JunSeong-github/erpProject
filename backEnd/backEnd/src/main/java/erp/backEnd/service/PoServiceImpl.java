@@ -169,13 +169,22 @@ public class PoServiceImpl implements PoService{
         // 방법 B(추천): 엔티티에 cascade + orphanRemoval 설정돼 있으면 poRepository.delete(po)만으로 끝
     }
 
-    @Override
+
     @Transactional
     public void reject(Long id, String reason) {
         Po po = poRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("PO 없음: " + id));
 
-        po.reject(reason); // ✅ 도메인 메서드
+        po.reject(reason);
+    }
+
+
+    @Transactional
+    public void startReceiving(Long poId) {
+        Po po = poRepository.findById(poId)
+                .orElseThrow(() -> new IllegalArgumentException("PO 없음"));
+
+        po.startReceiving(); // APPROVED -> ORDERED
     }
 
 }

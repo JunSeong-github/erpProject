@@ -73,4 +73,10 @@ public class PoController {
         return ResponseEntity.ok().build();
     }
 
+    @PostMapping("/startReceiving/{id}")
+    public ResponseEntity<Void> startReceiving(@PathVariable Long id) {
+        poService.startReceiving(id);
+        return ResponseEntity.ok().build();
+    }
+
 }

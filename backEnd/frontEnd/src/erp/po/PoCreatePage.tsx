@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient} from "@tanstack/react-query";
 // import axios from "axios";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 
-import { listItems, listVendors, Item, Vendor, getDetail, approvePo, rejectPo } from "../api";
+import { listItems, listVendors, Item, Vendor, getDetail, approvePo, rejectPo, startReceiving } from "../api";
 import {useEffect, useState} from "react";
 
 
@@ -63,6 +63,9 @@ export default function PoCreatePage() {
 
     const isDraft = poDetail?.poStatus === "DRAFT";
     const isRejected = poDetail?.poStatus === "REJECTED";
+    const isApproved = poDetail?.poStatus === "APPROVED";
+    const isReceivable =
+        poDetail?.poStatus === "ORDERED" || poDetail?.poStatus === "PARTIAL_RECEIVED";
 
     useEffect(() => {
         if (!poDetail) return;
@@ -440,6 +443,38 @@ export default function PoCreatePage() {
                             </button>
                         </div>
                     )}
+                </div>
+            )}
+
+            {isEdit && isApproved && (
+                <div style={{ marginTop: 12 }}>
+                    <button
+                        type="button"
+                        onClick={async () => {
+                            try {
+                                await startReceiving(Number(id)); // ✅ APPROVED -> ORDERED
+                                // ✅ 상세 다시 불러와서 상태 반영
+                                await queryClient.invalidateQueries({ queryKey: ["poDetail", Number(id)] });
+                                alert("입고 진행 상태로 변경되었습니다.");
+                            } catch (e) {
+                                console.error(e);
+                                alert("입고 진행 처리 중 오류가 발생했습니다.");
+                            }
+                        }}
+                    >
+                        입고 진행
+                    </button>
+                </div>
+            )}
+
+            {isEdit && isReceivable && (
+                <div style={{ marginTop: 12 }}>
+                    <button
+                        type="button"
+                        onClick={() => navigate(`/erp/receipt/${id}`, { state: { page: fromPage } })}
+                    >
+                        입고 등록 페이지로 이동
+                    </button>
                 </div>
             )}
 
