@@ -127,7 +127,37 @@ export async function createReceipt(poId: number, req: ReceiptCreateRequest) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(req),
     });
-    if (!res.ok) throw new Error(await res.text());
+    // if (!res.ok) throw new Error(await res.text());
+    if (!res.ok) {
+        // 1) 헤더에 detail을 실어준 경우(네가 했던 방식)
+        const headerDetail = res.headers.get("X-Error-Detail");
+        if (headerDetail) throw new Error(headerDetail);
+
+        // 2) JSON 에러 응답인 경우 (ErrorResponseDto 등)
+        const ct = res.headers.get("content-type") || "";
+        if (ct.includes("application/json")) {
+            const body = await res.json().catch(() => null);
+            const msg = body?.message || body?.msg || body?.error || JSON.stringify(body);
+            throw new Error(msg || `HTTP ${res.status}`);
+        }
+
+        // 3) 텍스트 응답인 경우
+        const text = await res.text().catch(() => "");
+        throw new Error(text || `HTTP ${res.status}`);
+    }
 }
 /** 입고등록 */
 
+/** 입고 등록내역 */
+
+export async function getReceiptSummary(poId: number) {
+    const res = await fetch(`${baseUrl}/receipt/summary/${poId}`);
+    if (!res.ok) throw new Error(await res.text());
+    return res.json() as Promise<{
+        remark?: string;
+        receivedQtyMap?: Record<string, number>; // key가 문자열로 옴
+        lineRemarkMap?: Record<string, string>;
+    }>;
+}
+
+/** 입고 등록내역 */

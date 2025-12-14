@@ -110,7 +110,7 @@ export default function PoListPage() {
                                 <td style={{ border: "1px solid #ccc", padding: "4px" }}>
                                     <button
                                         type="button"
-                                        onClick={() => navigate(`/erp/po/${po.id}`, { state: { page } })}
+                                        onClick={() => navigate(po.poStatus === "DRAFT" || po.poStatus === "REJECTED" || po.poStatus === "APPROVED" ? `/erp/po/${po.id}` : `/erp/receipt/${po.id}`, { state: { page } })}
                                         style={{ padding: "4px 8px", cursor: "pointer" }}
                                     >
                                         상세보기

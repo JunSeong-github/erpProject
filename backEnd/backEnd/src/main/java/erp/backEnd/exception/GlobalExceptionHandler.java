@@ -193,7 +193,12 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         log.error("exception: " + e.getClass().getSimpleName());
         log.error("message: " + e.getMessage());
         final ErrorResponseDto response = ErrorResponseDto.of(ILLEGAL_ARGUMENT);
-        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .header("X-Error-Detail", e.getMessage()) // ✅ 상세 메시지
+                .body(response);
+//        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
 
 //    @ExceptionHandler(AuthenticationException.class)

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { createReceipt, getDetail } from "../api";
+import { createReceipt, getDetail, getReceiptSummary } from "../api";
 
 // 너 PoDetail 타입이 있으면 그걸 쓰고, 없으면 any로 시작해도 됨.
 type ReceiptLineUI = {
@@ -10,6 +10,8 @@ type ReceiptLineUI = {
     orderedQty: number;
     unitPrice: number;
     amount: number;
+
+    totalReceivedQty : number;
 
     receivedQty: number; // 입력
     remainingQty: number; // 자동
@@ -33,20 +35,40 @@ export default function ReceiptCreatePage() {
         enabled: Number.isFinite(poId),
     });
 
+    const { data: summary } = useQuery({
+        queryKey: ["receiptSummary", poId],
+        queryFn: () => getReceiptSummary(poId),
+        enabled: Number.isFinite(poId),
+    });
+
     const [headerRemark, setHeaderRemark] = useState("");
     const [lines, setLines] = useState<ReceiptLineUI[]>([]);
     const [saving, setSaving] = useState(false);
+
+    const isReceived = poDetail?.poStatus === "RECEIVED";
 
     // ✅ PO 상세가 로딩되면 라인 초기화
     useEffect(() => {
         if (!poDetail) return;
 
-        // poDetail.lines 구조는 너 응답에 맞춰 매핑해야 함.
-        // 아래는 "poItemId, itemName, quantity, unitPrice, amount"가 내려온다고 가정
+        if (summary?.remark != null) {
+            setHeaderRemark(summary.remark);
+        }
+
+        const receivedMap = summary?.receivedQtyMap ?? {};
+        const lineRemarkMap = summary?.lineRemarkMap ?? {};
+
         const init: ReceiptLineUI[] = (poDetail.lines ?? []).map((l: any) => {
             const ordered = Number(l.quantity ?? 0);
+
+            // ⭐ poItemId가 없으면 l.id 같은 실제 필드로 바꿔야 함
+            const poItemId = Number(l.poItemId ?? l.id);
+
+            const totalReceivedQty = Number(receivedMap[String(poItemId)] ?? 0);
+            const remaining = Math.max(0, ordered - totalReceivedQty);
+
             return {
-                poItemId: Number(l.poItemId),       // ⭐ 꼭 poItemId 내려와야 함
+                poItemId,
                 itemName: String(l.itemName ?? ""),
                 etc: String(l.etc ?? ""),
                 poStatusLabel: String(l.poStatusLabel ?? ""),
@@ -54,14 +76,16 @@ export default function ReceiptCreatePage() {
                 unitPrice: Number(l.unitPrice ?? 0),
                 amount: Number(l.amount ?? 0),
 
+                totalReceivedQty:totalReceivedQty,
+
                 receivedQty: 0,
-                remainingQty: ordered,
-                lineRemark: "",
+                remainingQty: remaining,
+                lineRemark: String(lineRemarkMap[String(poItemId)] ?? ""),
             };
         });
 
         setLines(init);
-    }, [poDetail]);
+    }, [poDetail, summary]);
 
     const onChangeReceived = (poItemId: number, v: string) => {
         const qty = v === "" ? 0 : Math.max(0, Number(v));
@@ -82,7 +106,7 @@ export default function ReceiptCreatePage() {
 
     const canSubmit = useMemo(() => {
         if (!poDetail) return false;
-        // ORDERED 또는 PARTIAL_RECEIVED에서만 입고등록 가능하게(백엔드도 동일하게 막는 게 정석)
+
         return poDetail.poStatus != "CANCELLED" ;
     }, [poDetail]);
 
@@ -103,14 +127,17 @@ export default function ReceiptCreatePage() {
                     poItemId: l.poItemId,
                     receivedQty: l.receivedQty,
                     lineRemark: l.lineRemark,
+                    orderedQty:l.orderedQty,
+                    totalReceivedQty:l.totalReceivedQty,
                 })),
             });
 
             alert("입고 등록이 완료되었습니다.");
             goList();
-        } catch (e) {
+        } catch (e: any) {
             console.error(e);
-            alert("입고 등록 중 오류가 발생했습니다.");
+            alert(e?.message ?? "저장 중 오류가 발생했습니다.");
+
         } finally {
             setSaving(false);
         }
@@ -139,6 +166,7 @@ export default function ReceiptCreatePage() {
                     <input
                         type="text"
                         value={headerRemark}
+                        readOnly={isReceived}
                         onChange={(e) => setHeaderRemark(e.target.value)}
                         disabled={!canSubmit}
                     />
@@ -153,7 +181,10 @@ export default function ReceiptCreatePage() {
                     <th style={{ border: "1px solid #ccc", padding: 6 }}>발주당시가격</th>
                     <th style={{ border: "1px solid #ccc", padding: 6 }}>요청수량</th>
                     <th style={{ border: "1px solid #ccc", padding: 6 }}>합계가격</th>
+                    <th style={{ border: "1px solid #ccc", padding: 6 }}>누적입고수량</th>
+                    {!isReceived &&
                     <th style={{ border: "1px solid #ccc", padding: 6 }}>실제입고수량</th>
+                    }
                     <th style={{ border: "1px solid #ccc", padding: 6 }}>잔량</th>
                     <th style={{ border: "1px solid #ccc", padding: 6 }}>라인비고</th>
                 </tr>
@@ -165,6 +196,8 @@ export default function ReceiptCreatePage() {
                         <td style={{ border: "1px solid #ccc", padding: 6 }}>{l.unitPrice}</td>
                         <td style={{ border: "1px solid #ccc", padding: 6 }}>{l.orderedQty}</td>
                         <td style={{ border: "1px solid #ccc", padding: 6 }}>{l.amount}</td>
+                        <td style={{ border: "1px solid #ccc", padding: 6 }}>{l.totalReceivedQty}</td>
+                        {!isReceived &&
                         <td style={{ border: "1px solid #ccc", padding: 6 }}>
                             <input
                                 type="number"
@@ -173,11 +206,13 @@ export default function ReceiptCreatePage() {
                                 disabled={!canSubmit}
                             />
                         </td>
+                        }
                         <td style={{ border: "1px solid #ccc", padding: 6 }}>{l.remainingQty}</td>
                         <td style={{ border: "1px solid #ccc", padding: 6 }}>
                             <input
                                 type="text"
                                 value={l.lineRemark}
+                                readOnly={isReceived}
                                 onChange={(e) => onChangeLineRemark(l.poItemId, e.target.value)}
 
                             />

@@ -2,6 +2,7 @@ package erp.backEnd.service;
 
 import erp.backEnd.dto.po.ReceiptCreateRequest;
 import erp.backEnd.dto.po.ReceiptLineCreateRequest;
+import erp.backEnd.dto.po.ReceiptSummaryResponse;
 import erp.backEnd.entity.Po;
 import erp.backEnd.entity.PoItem;
 import erp.backEnd.entity.Receipt;
@@ -67,6 +68,7 @@ public class ReceiptServiceImpl implements ReceiptService {
 
             // 3) receivedQty 처리: null은 0으로 간주 (입력 안 한 라인도 있을 수 있음)
             long receivedQty = (lineReq.getReceivedQty() == null) ? 0L : lineReq.getReceivedQty();
+            long totalReceivedQty = (lineReq.getTotalReceivedQty() == null) ? 0L : lineReq.getTotalReceivedQty();
 
             // 4) 수량 정책 검증
             if (receivedQty < 0) {
@@ -74,10 +76,10 @@ public class ReceiptServiceImpl implements ReceiptService {
             }
 
             // (선택) 초과입고 금지 정책이면 여기서 막아버림
-            // long orderedQty = poItem.getQuantity();
-            // if (receivedQty > orderedQty) {
-            //     throw new IllegalArgumentException("초과 입고는 허용되지 않습니다. poItemId=" + poItemId);
-            // }
+             long orderedQty = poItem.getQuantity();
+             if (orderedQty < (receivedQty + totalReceivedQty)) {
+                 throw new IllegalArgumentException("초과 입고는 허용되지 않습니다. poItemId=" + poItemId);
+             }
 
             // 5) 엔티티 생성/추가
             receipt.addLine(
@@ -103,4 +105,36 @@ public class ReceiptServiceImpl implements ReceiptService {
 
         po.applyReceivingResult(allMatched);
     }
+
+    @Transactional(readOnly = true)
+    public ReceiptSummaryResponse getSummary(Long poId) {
+
+        ReceiptSummaryResponse resp = new ReceiptSummaryResponse();
+
+        // 1) 누적 입고수량(poItemId별 sum)
+        // 너가 QueryDSL로 만든 ReceiptRepositoryImpl.sumReceivedByPoItem(poId) 를 호출
+        Map<Long, Long> receivedSumMap = receiptRepository.sumReceivedByPoItem(poId);
+        resp.setReceivedQtyMap(receivedSumMap);
+
+        // 2) "최근 입고건"의 헤더 비고 + 라인 비고(최근건 기준)
+        Receipt latest = receiptRepository.findTopByPo_IdOrderByIdDesc(poId).orElse(null);
+        if (latest == null) {
+            // 입고 이력이 없으면 remark/lineRemarkMap은 비어있는 상태로 리턴
+            return resp;
+        }
+
+        resp.setRemark(latest.getRemark());
+
+        // 라인 비고는 “가장 최근 입고건”의 라인 비고를 사용
+        // (누적/병합은 정책이 애매해서 실무도 보통 최근건을 보여줌)
+        Map<Long, String> lineRemarkMap = new HashMap<>();
+        for (ReceiptLine line : latest.getLines()) {
+            Long poItemId = line.getPoItem().getPoItemId(); // PoItem PK getter 이름 맞춰줘
+            lineRemarkMap.put(poItemId, line.getLineRemark());
+        }
+        resp.setLineRemarkMap(lineRemarkMap);
+
+        return resp;
+    }
+
 }
