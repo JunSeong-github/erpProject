@@ -89,12 +89,14 @@ export default function ReceiptCreatePage() {
 
     const onChangeReceived = (poItemId: number, v: string) => {
         const qty = v === "" ? 0 : Math.max(0, Number(v));
+
         setLines((prev) =>
-            prev.map((x) =>
-                x.poItemId === poItemId
-                    ? { ...x, receivedQty: qty, remainingQty: Math.max(0, x.orderedQty - qty) }
-                    : x
-            )
+            prev.map((x) => {
+                if (x.poItemId !== poItemId) return x;
+
+                const remaining = Math.max(0, x.orderedQty - (x.totalReceivedQty + qty));
+                return { ...x, receivedQty: qty, remainingQty: remaining };
+            })
         );
     };
 
@@ -113,6 +115,23 @@ export default function ReceiptCreatePage() {
     const handleSubmit = async () => {
         if (!canSubmit) {
             alert("입고 등록이 가능한 상태가 아닙니다.");
+            return;
+        }
+
+        const overLines = lines.filter(
+            (l) => l.totalReceivedQty + l.receivedQty > l.orderedQty
+        );
+
+        if (overLines.length > 0) {
+            const msg =
+                overLines
+                    .map(
+                        (l) =>
+                            `${l.itemName}: 요청 ${l.orderedQty}, 누적 ${l.totalReceivedQty}, 이번 ${l.receivedQty} (합 ${l.totalReceivedQty + l.receivedQty})`
+                    )
+                    .join("\n") + "\n\n초과 입고는 저장할 수 없습니다.";
+
+            alert(msg);
             return;
         }
 

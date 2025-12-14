@@ -49,7 +49,7 @@ export default function PoCreatePage() {
 
     const [isSaving, setIsSaving] = useState(false);
 
-    const { data: poDetail } = useQuery({
+    const { data: poDetail, refetch: refetchPoDetail } = useQuery({
         queryKey: ["poDetail", id],
         queryFn: () => getDetail(Number(id)),
         enabled: isEdit,  // id 있을 때만 호출
@@ -453,7 +453,8 @@ export default function PoCreatePage() {
                         onClick={async () => {
                             try {
                                 await startReceiving(Number(id)); // ✅ APPROVED -> ORDERED
-                                // ✅ 상세 다시 불러와서 상태 반영
+                                //  상세 다시 불러와서 상태 반영
+                                await refetchPoDetail();
                                 await queryClient.invalidateQueries({ queryKey: ["poDetail", Number(id)] });
                                 alert("입고 진행 상태로 변경되었습니다.");
                             } catch (e) {
