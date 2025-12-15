@@ -28,6 +28,8 @@ export default function PoCreatePage() {
         staleTime: 1000 * 60, // 1분 캐싱 (옵션)
     });
 
+    const baseUrl = import.meta.env.VITE_API_BASE ?? "https://erpproject-pu8e.onrender.com";
+
     const { id } = useParams();
     const isEdit = Boolean(id);
     const navigate = useNavigate();
@@ -167,7 +169,6 @@ export default function PoCreatePage() {
 
         try {
             setIsSaving(true);
-            const baseUrl = import.meta.env.VITE_API_BASE;
 
             const url = isEdit
                 ? `${baseUrl}/po/${id}`       // 수정
@@ -200,7 +201,7 @@ export default function PoCreatePage() {
         if (!ok) return;
 
         try {
-            const baseUrl = import.meta.env.VITE_API_BASE;
+
             const res = await fetch(`${baseUrl}/po/${id}`, { method: "DELETE" });
 
             if (!res.ok) throw new Error(await res.text());
