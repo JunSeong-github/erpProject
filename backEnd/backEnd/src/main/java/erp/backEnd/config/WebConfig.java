@@ -12,6 +12,9 @@ public class WebConfig implements WebMvcConfigurer {
         registry.addMapping("/**")
                 .allowedOrigins("http://localhost:5173", "https://junseong-github.github.io")
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS")
+                .allowedHeaders("*")
+                .exposedHeaders("*")
+                .maxAge(3600)
                 .allowCredentials(true);
     }
 
