@@ -1,6 +1,7 @@
 import { api } from "../lib/axios";
 
-const baseUrl = import.meta.env.VITE_API_BASE_URL;
+// const baseUrl = import.meta.env.VITE_API_BASE_URL;
+const baseUrl = "https://erpproject-pu8e.onrender.com";
 
 export interface PageResp<T> {
     content: T[];
@@ -52,7 +53,7 @@ export async function listPo(params: { page: number; size: number }) {
         size: String(params.size),
         // sort: "deliveryDate,desc", // 정렬 넣고 싶으면 여기
     });
-
+    console.log(baseUrl);
     const res = await fetch(`${baseUrl}/po/list?${query.toString()}`);
     if (!res.ok) {
         const text = await res.text();
