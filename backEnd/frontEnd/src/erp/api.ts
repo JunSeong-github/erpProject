@@ -1,7 +1,7 @@
 import { api } from "../lib/axios";
 
-// const baseUrl = import.meta.env.VITE_API_BASE_URL;
-const baseUrl = "https://erpproject-pu8e.onrender.com";
+const baseUrl = import.meta.env.VITE_API_BASE;
+// const baseUrl = "https://erpproject-pu8e.onrender.com";
 
 export interface PageResp<T> {
     content: T[];
