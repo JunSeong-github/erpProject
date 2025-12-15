@@ -128,7 +128,6 @@ export default function PoCreatePage() {
     };
 
     const handleSave = async () => {
-        // 1) 간단한 유효성 체크
         if (!vendorCode) {
             alert("공급사를 선택하세요.");
             return;
@@ -153,15 +152,14 @@ export default function PoCreatePage() {
             return;
         }
 
-        // 2) 백엔드에 보낼 payload 만들기
+        // 백엔드에 보낼 payload
         const payload = {
-            // 이 이름들은 너 백엔드 DTO에 맞게 수정해줘
-            vendorCode: vendorCode,      // 또는 bpCode, bpName 등
-            deliveryDate: deliveryDate,  // "yyyy-MM-dd" -> LocalDate로 자동 매핑됨
+            vendorCode: vendorCode,
+            deliveryDate: deliveryDate,
             etc: etc,
             lines: lines.map((line) => ({
-                itemId: String(line.itemId),     // 백엔드가 String이면 이렇게
-                quantity: String(line.quantity),      // POLineRequest.qty 가 String이면
+                itemId: String(line.itemId),
+                quantity: String(line.quantity),
                 unitPrice: String(line.unitPrice),
                 amount: String(line.amount),
             })),
@@ -172,7 +170,7 @@ export default function PoCreatePage() {
             const baseUrl = import.meta.env.VITE_API_BASE;
 
             const url = isEdit
-                ? `${baseUrl}/po/${id}`       // 수정 API (PUT 또는 PATCH)
+                ? `${baseUrl}/po/${id}`       // 수정
                 : `${baseUrl}/po/create`;     // 신규등록
 
             const method = isEdit ? "PUT" : "POST";
@@ -220,9 +218,9 @@ export default function PoCreatePage() {
         mutationFn: (poId: number) => approvePo(poId),
         onSuccess: async () => {
             alert("승인되었습니다.");
-            // ✅ 상세 데이터 다시 불러오기
+         // 상세 데이터 다시 불러오기
             await queryClient.invalidateQueries({ queryKey: ["poDetail", id] });
-            // ✅ 목록도 최신화(목록에서 승인 상태 바로 보이게)
+            // 목록도 최신화(목록에서 승인 상태 바로 보이게)
             await queryClient.invalidateQueries({ queryKey: ["po"] });
         },
         onError: (err: unknown) => {
@@ -298,7 +296,6 @@ export default function PoCreatePage() {
                 <button type="button" onClick={addLine}>라인 추가</button>
             </div>
             )}
-            {/* 🔹 라인 반복 렌더링 */}
             <div>
                 {lines.map((line, index) => (
                     <div key={index} style={{ marginTop: "10px" }}>
@@ -320,7 +317,6 @@ export default function PoCreatePage() {
                             </select>
                         </label>
 
-                        {/* 단가 */}
                         <label>
                             &nbsp;단가:&nbsp;
                             <input
@@ -332,7 +328,6 @@ export default function PoCreatePage() {
                             />
                         </label>
 
-                        {/* 수량 */}
                         <label>
                             &nbsp;수량:&nbsp;
                             <input
@@ -344,7 +339,6 @@ export default function PoCreatePage() {
                             />
                         </label>
 
-                        {/* 합계 */}
                         <label>
                             &nbsp;합계:&nbsp;
                             <input

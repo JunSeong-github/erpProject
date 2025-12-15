@@ -14,10 +14,6 @@ public class ReceiptController {
 
     private final ReceiptService receiptService;
 
-    /**
-     * 입고 등록
-     * POST /receipt/create/{poId}
-     */
     @PostMapping("/create/{poId}")
     public ResponseEntity<Void> createReceipt(
             @PathVariable Long poId,

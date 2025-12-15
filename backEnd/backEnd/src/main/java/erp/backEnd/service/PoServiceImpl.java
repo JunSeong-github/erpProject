@@ -59,19 +59,19 @@ public class PoServiceImpl implements PoService{
        List<PoItem> poItems = req.getLines().stream()
                .map(lineReq -> {
 
-                   // 3-1) 품목 마스터 조회
+                   // 품목 마스터 조회
                    Item item = itemRepository.findById(lineReq.getItemId())
                            .orElseThrow(() -> new IllegalArgumentException("품목 없음: " + lineReq.getItemId()));
 
-                   // 3-2) 수량/단가 파싱 (문자열 → 숫자)
+                   // 수량/단가 파싱 (문자열 → 숫자)
                    Long quantity = lineReq.getQuantity();
                    BigDecimal unitPrice = lineReq.getUnitPrice();
                    BigDecimal amount = lineReq.getAmount();
 
-                   // 3-3) PoItem 엔티티 생성 (정적 팩토리 메서드 가정)
+                   // PoItem 엔티티 생성 (정적 팩토리 메서드 가정)
                    return PoItem.of(
-                           savedPo,   // FK : 어느 PO에 속한 라인인지
-                           item,      // FK : 어떤 품목인지
+                           savedPo,
+                           item,
                            quantity,
                            unitPrice,
                            amount
@@ -134,7 +134,7 @@ public class PoServiceImpl implements PoService{
 
             List<PoItem> poItems = req.getLines().stream()
                     .map(lineReq -> {
-                        // itemId는 프론트에서 String으로 보내고 있음
+
                         Long itemId = Long.valueOf(lineReq.getItemId());
 
                         Item item = itemRepository.getReferenceById(itemId);
@@ -157,16 +157,14 @@ public class PoServiceImpl implements PoService{
         Po po = poRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("PO 없음: " + id));
 
-        // DRAFT만 삭제 가능(원하면 룰 바꿔도 됨)
         if (po.getPoStatus() != PoStatus.DRAFT) {
             throw new IllegalStateException("DRAFT 상태만 삭제 가능합니다.");
         }
 
-        // 방법 A: 라인 먼저 삭제 후 헤더 삭제
+        // 라인 먼저 삭제 후 헤더 삭제
         poItemRepository.deleteByPo(po);
         poRepository.delete(po);
 
-        // 방법 B(추천): 엔티티에 cascade + orphanRemoval 설정돼 있으면 poRepository.delete(po)만으로 끝
     }
 
 

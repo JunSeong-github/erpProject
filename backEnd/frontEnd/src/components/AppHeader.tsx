@@ -19,11 +19,6 @@ export default function AppHeader() {
             <nav style={{ display: "flex", gap: 12 }}>
                 {link("/erp/po", "발주")}
                 {link("/erp/po/write", "발주작성")}
-                {/*{link("/erp/sales", "주문")}*/}
-                {/*{link("/erp/sales/new", "주문작성")}*/}
-                {/*{link("/erp/grn/new", "입고")}*/}
-                {/*{link("/erp/ship/new", "출고")}*/}
-                {/*{link("/erp/inv", "재고")}*/}
             </nav>
         </header>
     );

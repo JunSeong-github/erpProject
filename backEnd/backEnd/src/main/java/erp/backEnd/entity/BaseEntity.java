@@ -18,8 +18,6 @@ import java.time.LocalDateTime;
 @EntityListeners(AuditingEntityListener.class)
 @MappedSuperclass
 @Getter
-//@SuperBuilder
-//@NoArgsConstructor
 public abstract class BaseEntity extends BaseTimeEntity {
 
     @CreatedBy

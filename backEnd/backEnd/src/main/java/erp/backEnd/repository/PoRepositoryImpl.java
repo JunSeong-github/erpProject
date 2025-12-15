@@ -33,7 +33,6 @@ public class PoRepositoryImpl extends QuerydslRepositorySupport implements PoRep
 
     private JPAQueryFactory queryFactory;
 
-    // 생성자 무조건 생성해줘야하고 두개하면 안되고 한개만 해야함
     public PoRepositoryImpl(EntityManager em) {
         super(Po.class);
         this.queryFactory = new JPAQueryFactory(em);
@@ -88,7 +87,6 @@ public class PoRepositoryImpl extends QuerydslRepositorySupport implements PoRep
                 .fetchCount();
 //         return new PageImpl<>(content, pageable, total);
 
-        // getPage에서 토탈컨텐츠 그냥 계산 되면 함수자체 호출 안하는게있음
         JPAQuery<Po> countQuery = queryFactory
                 .select(po)
                 .from(po)
@@ -119,7 +117,7 @@ public class PoRepositoryImpl extends QuerydslRepositorySupport implements PoRep
         return queryFactory
                 .selectFrom(po)
                 .join(po.vendor, vendor).fetchJoin()
-                .leftJoin(po.poItems, poItem).fetchJoin()    // ← 여기 컬렉션 필드명에 맞게 수정 (예: po.poItems)
+                .leftJoin(po.poItems, poItem).fetchJoin()
                 .leftJoin(poItem.item, item).fetchJoin()
                 .where(po.id.eq(id))
                 .fetchOne();

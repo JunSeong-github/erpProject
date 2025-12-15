@@ -7,8 +7,6 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public enum AuthProvider {
 
-    //멤버 엔티티에 추가해놧음
-
     GOOGLE("GOOGLE"),
     KAKAO("KAKAO"),
     NAVER("NAVER"),

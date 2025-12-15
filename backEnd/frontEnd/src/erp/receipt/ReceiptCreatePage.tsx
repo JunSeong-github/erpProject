@@ -28,7 +28,7 @@ export default function ReceiptCreatePage() {
 
     const goList = () => navigate(`/erp/po?page=${fromPage}`);
 
-    // ✅ PO 상세 다시 조회해서 화면 구성 (읽기전용)
+    // PO 상세 다시 조회해서 화면 구성
     const { data: poDetail, isLoading } = useQuery({
         queryKey: ["poDetail", poId],
         queryFn: () => getDetail(poId),
@@ -47,7 +47,7 @@ export default function ReceiptCreatePage() {
 
     const isReceived = poDetail?.poStatus === "RECEIVED";
 
-    // ✅ PO 상세가 로딩되면 라인 초기화
+    // PO 상세가 로딩되면 라인 초기화
     useEffect(() => {
         if (!poDetail) return;
 
@@ -61,7 +61,6 @@ export default function ReceiptCreatePage() {
         const init: ReceiptLineUI[] = (poDetail.lines ?? []).map((l: any) => {
             const ordered = Number(l.quantity ?? 0);
 
-            // ⭐ poItemId가 없으면 l.id 같은 실제 필드로 바꿔야 함
             const poItemId = Number(l.poItemId ?? l.id);
 
             const totalReceivedQty = Number(receivedMap[String(poItemId)] ?? 0);
@@ -169,7 +168,6 @@ export default function ReceiptCreatePage() {
         <div>
             <h2>입고 등록</h2>
 
-            {/* ✅ 발주 헤더 (읽기 전용 표시) */}
             <div style={{ marginBottom: 12 }}>
                 <div>PO ID: {poDetail.id}</div>
                 <div>공급사: {poDetail.vendorName} ({poDetail.vendorCode})</div>
@@ -178,7 +176,6 @@ export default function ReceiptCreatePage() {
                 <div>발주 비고: {poDetail.etc}</div>
             </div>
 
-            {/* ✅ 입고 헤더 비고 */}
             <div style={{ marginBottom: 12 }}>
                 <label>
                     입고 비고:&nbsp;
@@ -192,7 +189,6 @@ export default function ReceiptCreatePage() {
                 </label>
             </div>
 
-            {/* ✅ 라인 테이블 */}
             <table style={{ borderCollapse: "collapse", width: "100%" }}>
                 <thead>
                 <tr>

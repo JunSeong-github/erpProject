@@ -9,7 +9,6 @@ export default function PoListPage() {
     // const [page, setPage] = useState(0);
     const [searchParams, setSearchParams] = useSearchParams();
 
-// URL에서 page 읽기 (없으면 0)
     const initialPage = Math.max(Number(searchParams.get("page") ?? "0"), 0);
 
 // page 상태
@@ -61,7 +60,6 @@ export default function PoListPage() {
 
             {!isLoading && !isError && (
                 <>
-                    {/* 테이블 */}
                     <table
                         style={{
                             borderCollapse: "collapse",
@@ -116,7 +114,6 @@ export default function PoListPage() {
                                         상세보기
                                     </button>
 
-                                    {/* DRAFT일 때만 승인 버튼 노출 */}
                                     {po.poStatus === "DRAFT" && (
                                         <button
                                             type="button"
@@ -133,7 +130,7 @@ export default function PoListPage() {
                         </tbody>
                     </table>
 
-                    {/* 페이징 영역 */}
+                    {/* 페이징 */}
                     <div style={{ marginTop: "10px", display: "flex", gap: "8px", alignItems: "center" }}>
                         <button
                             type="button"

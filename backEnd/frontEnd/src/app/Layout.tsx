@@ -43,7 +43,7 @@ export default function Layout() {
             </header>
 
             <main style={{ maxWidth:1000, margin:"24px auto", padding:"0 16px" }}>
-                <Outlet />   {/* 하위 라우트가 여기 렌더링됨 */}
+                <Outlet />
             </main>
         </div>
     );

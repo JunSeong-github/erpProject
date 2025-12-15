@@ -1,7 +1,8 @@
 #debug: true
 # 공통 설정
 server:
-  port: 8080
+#  port: 8080
+  port: ${PORT:8080}
 
 spring:
   profiles:

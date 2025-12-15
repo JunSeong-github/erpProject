@@ -43,7 +43,6 @@ public class ReceiptServiceImpl implements ReceiptService {
         LocalDate receiptDate = (req.getReceiptDate() != null) ? req.getReceiptDate() : LocalDate.now();
         Receipt receipt = Receipt.create(po, receiptDate, req.getRemark());
 
-        // poItemId -> PoItem 매핑
         Map<Long, PoItem> poItemMap = po.getPoItems().stream()
                 .collect(Collectors.toMap(PoItem::getPoItemId, Function.identity()));
 
@@ -54,34 +53,29 @@ public class ReceiptServiceImpl implements ReceiptService {
 
         for (ReceiptLineCreateRequest lineReq : lines) {
 
-            // 1) 라인 식별자 검증
             Long poItemId = lineReq.getPoItemId();
             if (poItemId == null) {
                 throw new IllegalArgumentException("poItemId는 필수입니다.");
             }
 
-            // 2) PO 라인 존재 검증 (클라가 조작/오류로 다른 라인 보낼 수 있음)
             PoItem poItem = poItemMap.get(poItemId);
             if (poItem == null) {
                 throw new IllegalArgumentException("PO 라인 없음: " + poItemId);
             }
 
-            // 3) receivedQty 처리: null은 0으로 간주 (입력 안 한 라인도 있을 수 있음)
             long receivedQty = (lineReq.getReceivedQty() == null) ? 0L : lineReq.getReceivedQty();
             long totalReceivedQty = (lineReq.getTotalReceivedQty() == null) ? 0L : lineReq.getTotalReceivedQty();
 
-            // 4) 수량 정책 검증
             if (receivedQty < 0) {
                 throw new IllegalArgumentException("입고수량은 0 이상이어야 합니다. poItemId=" + poItemId);
             }
 
-            // (선택) 초과입고 금지 정책이면 여기서 막아버림
-             long orderedQty = poItem.getQuantity();
-             if (orderedQty < (receivedQty + totalReceivedQty)) {
-                 throw new IllegalArgumentException("초과 입고는 허용되지 않습니다. poItemId=" + poItemId);
-             }
+//            // 초과입고 금지 -> 앞단에서 진행하는걸로 수정
+//             long orderedQty = poItem.getQuantity();
+//             if (orderedQty < (receivedQty + totalReceivedQty)) {
+//                 throw new IllegalArgumentException("초과 입고는 허용되지 않습니다. poItemId=" + poItemId);
+//             }
 
-            // 5) 엔티티 생성/추가
             receipt.addLine(
                     ReceiptLine.create(poItem, receivedQty, lineReq.getLineRemark())
             );
@@ -89,7 +83,6 @@ public class ReceiptServiceImpl implements ReceiptService {
 
         receiptRepository.save(receipt);
 
-        // 누적 입고수량 집계해서 상태결정
         Map<Long, Long> receivedSumMap = receiptRepository.sumReceivedByPoItem(poId);
 
         boolean allMatched = true;
@@ -111,22 +104,16 @@ public class ReceiptServiceImpl implements ReceiptService {
 
         ReceiptSummaryResponse resp = new ReceiptSummaryResponse();
 
-        // 1) 누적 입고수량(poItemId별 sum)
-        // 너가 QueryDSL로 만든 ReceiptRepositoryImpl.sumReceivedByPoItem(poId) 를 호출
         Map<Long, Long> receivedSumMap = receiptRepository.sumReceivedByPoItem(poId);
         resp.setReceivedQtyMap(receivedSumMap);
 
-        // 2) "최근 입고건"의 헤더 비고 + 라인 비고(최근건 기준)
         Receipt latest = receiptRepository.findTopByPo_IdOrderByIdDesc(poId).orElse(null);
         if (latest == null) {
-            // 입고 이력이 없으면 remark/lineRemarkMap은 비어있는 상태로 리턴
             return resp;
         }
 
         resp.setRemark(latest.getRemark());
 
-        // 라인 비고는 “가장 최근 입고건”의 라인 비고를 사용
-        // (누적/병합은 정책이 애매해서 실무도 보통 최근건을 보여줌)
         Map<Long, String> lineRemarkMap = new HashMap<>();
         for (ReceiptLine line : latest.getLines()) {
             Long poItemId = line.getPoItem().getPoItemId(); // PoItem PK getter 이름 맞춰줘

@@ -28,7 +28,6 @@ public class FindMemberResponseDto {
 
 
     public static FindMemberResponseDto toDto(Member member) {
-        //DTO 생성 같은 로직은 DTO 클래스에서 핸들링하는게 좋아서 아래 코드를 FindMemberResponseDto로 옮길거임
         return FindMemberResponseDto.builder()
                 .id(member.getId())
                 .username(member.getUsername())

@@ -30,7 +30,7 @@ public class MemberController {
     @GetMapping("list")
     public ResponseEntity<List<FindMemberResponseDto>> findMemberList() {
         List<FindMemberResponseDto> result = memberService.findMemberList();
-        return ResponseEntity.ok(result); //굿 테스트 코드 작성하든지 스웨거 들어가보면될거같은데 스웨거 ㄴㄴ 그거 기본주소 잇을텐데 http://localhost:8080/swagger-ui/index.html 스웨거 됨? 지금 빌드오류남 너도 보이나 오류내용 난 몰루 성공이라 뜨는데
+        return ResponseEntity.ok(result);
     }
 
 }

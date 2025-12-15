@@ -12,7 +12,7 @@ import ReceiptCreatePage from "../erp/receipt/ReceiptCreatePage";
 export const router = createBrowserRouter([
     {
         path: "/",
-        element: <AppLayout />,         // ← 여기서 헤더가 항상 렌더됨
+        element: <AppLayout />,
         children: [
             { path: "/", element: <Navigate to="/erp/po" replace /> },   // ← 기본 리다이렉트
             // { path: "/erp/inv", element: <InventoryPage /> },
