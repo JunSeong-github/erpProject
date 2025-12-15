@@ -1,6 +1,6 @@
 import { api } from "../lib/axios";
 
-const baseUrl = import.meta.env.VITE_API_BASE;
+const baseUrl = import.meta.env.VITE_API_BASE_URL;
 
 export interface PageResp<T> {
     content: T[];
