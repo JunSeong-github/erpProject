@@ -23,4 +23,6 @@ export const router = createBrowserRouter([
             { path: "*", element: <Navigate to="/" replace /> },          // 안전망
         ],
     },
-]);
+],
+    { basename: "/erpProject" }
+);
