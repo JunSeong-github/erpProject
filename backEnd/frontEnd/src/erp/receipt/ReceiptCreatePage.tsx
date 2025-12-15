@@ -108,7 +108,7 @@ export default function ReceiptCreatePage() {
     const canSubmit = useMemo(() => {
         if (!poDetail) return false;
 
-        return poDetail.poStatus != "CANCELLED" ;
+        return poDetail.poStatus != "RECEIVED" ;
     }, [poDetail]);
 
     const handleSubmit = async () => {
@@ -244,7 +244,7 @@ export default function ReceiptCreatePage() {
                 <button type="button" onClick={goList}>
                     목록으로
                 </button>
-
+                {canSubmit && (
                 <button
                     type="button"
                     onClick={handleSubmit}
@@ -253,6 +253,7 @@ export default function ReceiptCreatePage() {
                 >
                     {saving ? "저장 중..." : "입고 등록"}
                 </button>
+                    )}
             </div>
 
             {!canSubmit && (
