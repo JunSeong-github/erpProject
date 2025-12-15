@@ -350,7 +350,7 @@ export default function PoCreatePage() {
                             />
                         </label>
 
-                        {modified && (
+                        {(!isEdit || modified) && (
                             <button
                                 type="button"
                                 onClick={() => removeLine(index)}
