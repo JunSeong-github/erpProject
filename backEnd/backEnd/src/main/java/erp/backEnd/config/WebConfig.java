@@ -10,17 +10,12 @@ public class WebConfig implements WebMvcConfigurer {
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")
-                .allowedOriginPatterns(
-                        "http://localhost:*",
-                        "https://junseong-github.github.io"
-                )
-//                .allowedOrigins("http://localhost:5173", "https://junseong-github.github.io")
+                .allowedOrigins("http://localhost:5173", "https://junseong-github.github.io")
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS")
                 .allowedHeaders("*")
                 .exposedHeaders("*")
                 .maxAge(3600)
-                .allowCredentials(false);
-//                .allowCredentials(true);
+                .allowCredentials(true);
     }
 
 }
