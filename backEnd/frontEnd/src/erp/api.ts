@@ -1,6 +1,6 @@
 import { api } from "../lib/axios";
 
-const baseUrl = import.meta.env.VITE_API_BASE;
+const baseUrl = import.meta.env.VITE_API_BASE ?? "https://erpproject-pu8e.onrender.com";
 // const baseUrl = "https://erpproject-pu8e.onrender.com";
 
 export interface PageResp<T> {
