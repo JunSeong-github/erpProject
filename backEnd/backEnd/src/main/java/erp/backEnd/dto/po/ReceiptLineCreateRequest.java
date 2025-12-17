@@ -5,8 +5,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-@Getter
-@Setter
 @Data
 @NoArgsConstructor
 public class ReceiptLineCreateRequest {
@@ -16,27 +14,4 @@ public class ReceiptLineCreateRequest {
     private Long orderedQty; // 요청입고수량
     private Long totalReceivedQty; // 누적입고수량
 
-//    public Long getPoItemId() {
-//        return poItemId;
-//    }
-//
-//    public void setPoItemId(Long poItemId) {
-//        this.poItemId = poItemId;
-//    }
-//
-//    public Long getReceivedQty() {
-//        return receivedQty;
-//    }
-//
-//    public void setReceivedQty(Long receivedQty) {
-//        this.receivedQty = receivedQty;
-//    }
-//
-//    public String getLineRemark() {
-//        return lineRemark;
-//    }
-//
-//    public void setLineRemark(String lineRemark) {
-//        this.lineRemark = lineRemark;
-//    }
 }

@@ -13,13 +13,5 @@ public class ReceiptSummaryResponse {
     private Map<Long, Long> receivedQtyMap = new HashMap<>(); // poItemId -> 누적입고수량
     private Map<Long, String> lineRemarkMap = new HashMap<>(); // poItemId -> (최근 입고건) 라인비고
 
-    public String getRemark() { return remark; }
-    public void setRemark(String remark) { this.remark = remark; }
-
-    public Map<Long, Long> getReceivedQtyMap() { return receivedQtyMap; }
-    public void setReceivedQtyMap(Map<Long, Long> receivedQtyMap) { this.receivedQtyMap = receivedQtyMap; }
-
-    public Map<Long, String> getLineRemarkMap() { return lineRemarkMap; }
-    public void setLineRemarkMap(Map<Long, String> lineRemarkMap) { this.lineRemarkMap = lineRemarkMap; }
 }
 

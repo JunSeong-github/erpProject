@@ -14,27 +14,4 @@ public class ReceiptCreateRequest {
     private String remark;             // 입고 헤더 비고
     private List<ReceiptLineCreateRequest> lines = new ArrayList<>();
 
-    public LocalDate getReceiptDate() {
-        return receiptDate;
-    }
-
-    public void setReceiptDate(LocalDate receiptDate) {
-        this.receiptDate = receiptDate;
-    }
-
-    public String getRemark() {
-        return remark;
-    }
-
-    public void setRemark(String remark) {
-        this.remark = remark;
-    }
-
-    public List<ReceiptLineCreateRequest> getLines() {
-        return lines;
-    }
-
-    public void setLines(List<ReceiptLineCreateRequest> lines) {
-        this.lines = lines;
-    }
 }

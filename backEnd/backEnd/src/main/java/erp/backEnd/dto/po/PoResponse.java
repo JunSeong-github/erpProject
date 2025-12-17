@@ -36,10 +36,6 @@ public class PoResponse {
         this.rejectReason = rejectReason;
     }
 
-    public String getPoStatusLabel() {
-        return poStatus != null ? poStatus.getLabel() : null;
-    }
-
     public static PoResponse from(Po po) {
         PoResponse dto = new PoResponse(
                 po.getId(),

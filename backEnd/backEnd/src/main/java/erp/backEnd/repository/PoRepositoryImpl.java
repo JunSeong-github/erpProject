@@ -112,7 +112,7 @@ public class PoRepositoryImpl extends QuerydslRepositorySupport implements PoRep
     @Override
     public Po findDetail(Long id) {
 
-        // 1) 헤더 + 라인 + 품목 한 번에 조회 (fetch join 형태)
+        //헤더 + 라인 + 품목 한 번에 조회
 
         return queryFactory
                 .selectFrom(po)

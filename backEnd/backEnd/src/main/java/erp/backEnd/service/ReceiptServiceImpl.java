@@ -37,7 +37,7 @@ public class ReceiptServiceImpl implements ReceiptService {
         if (po == null) throw new IllegalArgumentException("PO 없음");
 
         if (!(po.getPoStatus() == PoStatus.ORDERED || po.getPoStatus() == PoStatus.PARTIAL_RECEIVED)) {
-            throw new IllegalStateException("ORDERED 또는 PARTIAL_RECEIVED 상태만 입고 등록 가능합니다.");
+            throw new IllegalStateException("입고진행 또는 부분입고 상태만 입고 등록 가능합니다.");
         }
 
         LocalDate receiptDate = (req.getReceiptDate() != null) ? req.getReceiptDate() : LocalDate.now();

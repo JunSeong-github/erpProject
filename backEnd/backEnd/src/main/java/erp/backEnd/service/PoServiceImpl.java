@@ -41,34 +41,30 @@ public class PoServiceImpl implements PoService{
 
    public Po save(PoCreateRequest req) {
 
-//       return poRepository.poSave(req);
        Vendor vendor = vendorRepository.findByVendorCode(req.getVendorCode())
                .orElseThrow(() -> new IllegalArgumentException("공급사 없음"));
 
        Po po = Po.of(
-               vendor,                  // FK + 연관관계
+               vendor,
                req.getDeliveryDate(),
 //               req.getPoStatus(),
                PoStatus.valueOf("DRAFT"),
                req.getEtc()
        );
 
-       //pk가져오깅
        Po savedPo = poRepository.save(po);
 
        List<PoItem> poItems = req.getLines().stream()
                .map(lineReq -> {
 
-                   // 품목 마스터 조회
+
                    Item item = itemRepository.findById(lineReq.getItemId())
                            .orElseThrow(() -> new IllegalArgumentException("품목 없음: " + lineReq.getItemId()));
 
-                   // 수량/단가 파싱 (문자열 → 숫자)
                    Long quantity = lineReq.getQuantity();
                    BigDecimal unitPrice = lineReq.getUnitPrice();
                    BigDecimal amount = lineReq.getAmount();
 
-                   // PoItem 엔티티 생성 (정적 팩토리 메서드 가정)
                    return PoItem.of(
                            savedPo,
                            item,

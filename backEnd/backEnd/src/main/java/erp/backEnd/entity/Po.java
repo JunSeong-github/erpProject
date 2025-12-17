@@ -20,12 +20,6 @@ public class Po extends BaseEntity {
     @Column(name="po_id", comment = "발주번호") // db테이블명_// pk컬럼명
     private Long id;
 
-//    @Column(nullable = false, comment = "공급사_코드") //  ex) 10001
-//    private String vendorCode;
-
-//    @Column(nullable = false, comment = "공급사명")
-//    private String vendorName;
-
     @Column(nullable = false, comment = "납기 요청일")
     private LocalDate deliveryDate;
 
