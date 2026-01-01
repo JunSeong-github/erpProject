@@ -130,11 +130,10 @@ export async function createReceipt(poId: number, req: ReceiptCreateRequest) {
     });
     // if (!res.ok) throw new Error(await res.text());
     if (!res.ok) {
-        // 1) 헤더에 detail을 실어준 경우(네가 했던 방식)
+
         const headerDetail = res.headers.get("X-Error-Detail");
         if (headerDetail) throw new Error(headerDetail);
 
-        // 2) JSON 에러 응답인 경우 (ErrorResponseDto 등)
         const ct = res.headers.get("content-type") || "";
         if (ct.includes("application/json")) {
             const body = await res.json().catch(() => null);
@@ -142,7 +141,6 @@ export async function createReceipt(poId: number, req: ReceiptCreateRequest) {
             throw new Error(msg || `HTTP ${res.status}`);
         }
 
-        // 3) 텍스트 응답인 경우
         const text = await res.text().catch(() => "");
         throw new Error(text || `HTTP ${res.status}`);
     }
