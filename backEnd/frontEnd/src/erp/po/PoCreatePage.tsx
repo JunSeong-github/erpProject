@@ -28,7 +28,8 @@ export default function PoCreatePage() {
         staleTime: 1000 * 60, // 1분 캐싱 (옵션)
     });
 
-    const baseUrl = import.meta.env.VITE_API_BASE ?? "https://erpproject-pu8e.onrender.com";
+    // const baseUrl = import.meta.env.VITE_API_BASE ?? "https://erpproject-pu8e.onrender.com";
+    const baseUrl = import.meta.env.VITE_API_BASE ?? "http://localhost:8080";
 
     const { id } = useParams();
     const isEdit = Boolean(id);

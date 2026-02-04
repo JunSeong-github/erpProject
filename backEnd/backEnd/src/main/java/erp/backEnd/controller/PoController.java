@@ -5,6 +5,7 @@ import erp.backEnd.dto.po.PoRejectRequest;
 import erp.backEnd.dto.po.PoResponse;
 import erp.backEnd.dto.po.PoSearchCondition;
 import erp.backEnd.entity.Po;
+import erp.backEnd.enumeration.PoStatus;
 import erp.backEnd.service.PoService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -12,7 +13,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController("po")
 @RequestMapping("/po")
@@ -26,6 +30,17 @@ public class PoController {
 //        List<PoResponse> poList = poService.findPoList();
 //        return ResponseEntity.ok(poList);
 //    }
+
+    @GetMapping("/statuses")
+    public ResponseEntity<List<Map<String, String>>> getPoStatuses() {
+        List<Map<String, String>> statuses = Arrays.stream(PoStatus.values())
+                .map(status -> Map.of(
+                        "code", status.getCode(),
+                        "label", status.getLabel()
+                ))
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(statuses);
+    }
 
     @GetMapping("/list")
     public ResponseEntity<Page<PoResponse>> list(PoSearchCondition poSearchCondition, Pageable pageable) {

@@ -1,6 +1,7 @@
 import { api } from "../lib/axios";
 
-const baseUrl = import.meta.env.VITE_API_BASE ?? "https://erpproject-pu8e.onrender.com";
+// const baseUrl = import.meta.env.VITE_API_BASE ?? "https://erpproject-pu8e.onrender.com";
+const baseUrl = import.meta.env.VITE_API_BASE ?? "http://localhost:8080";
 // const baseUrl = "https://erpproject-pu8e.onrender.com";
 
 export interface PageResp<T> {
@@ -46,13 +47,47 @@ export type Po = {
     createDate: string;  // BaseTimeEntity에서 온 값
 }
 
+export interface PoSearchCondition {
+    vendorName?: string;
+    vendorCode?: string;
+    deliveryDate?: string;
+    poStatus?: string;
+}
+
+export type PoStatusOption = {
+    code: string;
+    label: string;
+};
+
+export async function getPoStatuses() {
+    const res = await fetch(`${baseUrl}/po/statuses`);
+    if (!res.ok) throw new Error("상태 목록 조회 실패");
+    return (await res.json()) as PoStatusOption[];
+}
+
 // 목록 조회
-export async function listPo(params: { page: number; size: number }) {
+export async function listPo(params: { page: number; size: number; condition?: PoSearchCondition; }) {
     const query = new URLSearchParams({
         page: String(params.page), // 0-base
         size: String(params.size),
         // sort: "deliveryDate,desc", // 정렬 넣고 싶으면 여기
     });
+
+    if (params.condition) {
+        if (params.condition.vendorName) {
+            query.append("vendorName", params.condition.vendorName);
+        }
+        if (params.condition.vendorCode) {
+            query.append("vendorCode", params.condition.vendorCode);
+        }
+        if (params.condition.deliveryDate) {
+            query.append("deliveryDate", params.condition.deliveryDate);
+        }
+        if (params.condition.poStatus) {
+            query.append("poStatus", params.condition.poStatus);
+        }
+    }
+
     console.log(baseUrl);
     const res = await fetch(`${baseUrl}/po/list?${query.toString()}`);
     if (!res.ok) {

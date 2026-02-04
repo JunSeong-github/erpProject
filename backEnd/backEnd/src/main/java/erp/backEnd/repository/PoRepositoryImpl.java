@@ -19,8 +19,11 @@ import org.springframework.data.support.PageableExecutionUtils;
 import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 import static erp.backEnd.entity.QItem.item;
 import static erp.backEnd.entity.QPo.po;
@@ -69,10 +72,13 @@ public class PoRepositoryImpl extends QuerydslRepositorySupport implements PoRep
                         po.rejectReason
                       ))
                 .from(po)
+                .join(po.vendor, vendor)
                 .where(
                         vendorNameEq(condition.getVendorName()),
                         vendorCodeEq(condition.getVendorCode()),
-                        poStatusEq(condition.getPoStatus()))
+                        poStatusEq(condition.getPoStatus()),
+                        deliveryDateEq(condition.getDeliveryDate())
+                        )
                 .orderBy(po.createdDate.desc())
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
@@ -83,7 +89,9 @@ public class PoRepositoryImpl extends QuerydslRepositorySupport implements PoRep
                 .where(
                         vendorNameEq(condition.getVendorName()),
                         vendorCodeEq(condition.getVendorCode()),
-                        poStatusEq(condition.getPoStatus()))
+                        poStatusEq(condition.getPoStatus()),
+                        deliveryDateEq(condition.getDeliveryDate())
+                        )
                 .fetchCount();
 //         return new PageImpl<>(content, pageable, total);
 
@@ -109,18 +117,24 @@ public class PoRepositoryImpl extends QuerydslRepositorySupport implements PoRep
         return isEmpty(poStatus) ? null : po.poStatus.eq(poStatus);
     }
 
+    private BooleanExpression deliveryDateEq(LocalDate deliveryDate) {
+        return isEmpty(deliveryDate) ? null : po.deliveryDate.eq(deliveryDate);
+    }
+
     @Override
-    public Po findDetail(Long id) {
+    public Optional<Po> findDetail(Long id) {
 
         //헤더 + 라인 + 품목 한 번에 조회
 
-        return queryFactory
+        return Optional.ofNullable(
+                queryFactory
                 .selectFrom(po)
                 .join(po.vendor, vendor).fetchJoin()
                 .leftJoin(po.poItems, poItem).fetchJoin()
                 .leftJoin(poItem.item, item).fetchJoin()
                 .where(po.id.eq(id))
-                .fetchOne();
+                .fetchOne()
+        );
 
     }
 

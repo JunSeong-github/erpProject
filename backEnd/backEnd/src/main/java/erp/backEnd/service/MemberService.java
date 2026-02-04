@@ -7,7 +7,7 @@ import java.util.List;
 
 public interface MemberService{
 
-   FindMemberResponseDto findMember(Long memberId);
+   FindMemberResponseDto findMember(Long id);
 
    List<FindMemberResponseDto> findMemberList();
 

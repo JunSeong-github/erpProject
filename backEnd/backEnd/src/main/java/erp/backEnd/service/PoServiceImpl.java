@@ -3,11 +3,10 @@ package erp.backEnd.service;
 import erp.backEnd.dto.po.PoCreateRequest;
 import erp.backEnd.dto.po.PoResponse;
 import erp.backEnd.dto.po.PoSearchCondition;
-import erp.backEnd.entity.Item;
-import erp.backEnd.entity.Po;
-import erp.backEnd.entity.PoItem;
-import erp.backEnd.entity.Vendor;
+import erp.backEnd.entity.*;
 import erp.backEnd.enumeration.PoStatus;
+import erp.backEnd.exception.BusinessException;
+import erp.backEnd.exception.ErrorCode;
 import erp.backEnd.repository.ItemRepository;
 import erp.backEnd.repository.PoItemRepository;
 import erp.backEnd.repository.PoRepository;
@@ -20,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -98,10 +98,12 @@ public class PoServiceImpl implements PoService{
     @Override
     @Transactional(readOnly = true)
     public PoResponse getDetail(Long id) {
-        Po po = poRepository.findDetail(id);
-        if (po == null) {
-            throw new IllegalArgumentException("발주를 찾을 수 없습니다. id=" + id);
-        }
+        Optional<Po> optionalPo = poRepository.findDetail(id);
+//        if (po == null) {
+//            throw new IllegalArgumentException("발주를 찾을 수 없습니다. id=" + id);
+//        }
+
+        Po po = optionalPo.orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
         return PoResponse.from(po);
     }

@@ -18,6 +18,7 @@ public class PoResponse {
     private String vendorCode;      // 공급사코드
     private LocalDate deliveryDate; // 납기 요청일
     private PoStatus poStatus;      // 발주 상태
+    private String poStatusLabel;
     private String etc;
     private LocalDateTime createDate;
     private String rejectReason;
@@ -31,6 +32,7 @@ public class PoResponse {
         this.vendorCode = vendorCode;
         this.deliveryDate = deliveryDate;
         this.poStatus = poStatus;
+        this.poStatusLabel = poStatus.getLabel();
         this.etc = etc;
         this.createDate = createDate;
         this.rejectReason = rejectReason;

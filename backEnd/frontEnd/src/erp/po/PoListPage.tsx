@@ -1,12 +1,11 @@
 
-import { useState } from "react";
+import {useEffect, useState} from "react";
 import { useQuery, keepPreviousData, useMutation, useQueryClient  } from "@tanstack/react-query";
-import { listPo, PageResp, Po, approvePo } from "../api";
+import { listPo, PageResp, Po, approvePo, PoSearchCondition, getPoStatuses, PoStatusOption } from "../api";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 
 export default function PoListPage() {
-    // 화면에서 보이는 페이지는 1부터, 서버에는 0부터 보내기
-    // const [page, setPage] = useState(0);
+
     const [searchParams, setSearchParams] = useSearchParams();
 
     const initialPage = Math.max(Number(searchParams.get("page") ?? "0"), 0);
@@ -15,14 +14,29 @@ export default function PoListPage() {
     const [page, setPage] = useState(initialPage);
     const pageSize = 10;
 
+    const [poStatuses, setPoStatuses] = useState<PoStatusOption[]>([]);
+
+    const [searchCondition, setSearchCondition] = useState<PoSearchCondition>({
+        vendorName: "",
+        vendorCode: "",
+        deliveryDate: "",
+        poStatus: ""
+    });
+
+    const [appliedCondition, setAppliedCondition] = useState<PoSearchCondition>({});
+
+    useEffect(() => {
+        getPoStatuses().then(setPoStatuses).catch(console.error);
+    }, []);
+
     const setPageAndSync = (next: number) => {
         setPage(next);
         setSearchParams({ page: String(next) });
     };
 
-    const { data, isLoading, isError, error } = useQuery<PageResp<Po>>({
+    const { data, isLoading, isError, error, refetch } = useQuery<PageResp<Po>>({
         queryKey: ["po", page],
-        queryFn: () => listPo({ page, size: pageSize }),
+        queryFn: () => listPo({ page, size: pageSize, condition: appliedCondition }),
         placeholderData: keepPreviousData,
     });
 
@@ -39,6 +53,15 @@ export default function PoListPage() {
         },
     });
 
+    const handleSearch = () => {
+
+        setPage(0);
+        setSearchParams({ page: "0" });
+        setAppliedCondition(searchCondition);
+
+        setTimeout(() => refetch(), 0);
+    };
+
     const poList = data?.content ?? [];
     const currentPage = data?.number ?? 0;
     const totalPages = data?.totalPages ?? 0;
@@ -48,6 +71,75 @@ export default function PoListPage() {
     return (
         <div>
             <h2>발주 목록</h2>
+
+            <div style={{ marginBottom: "10px" }}>
+                <label>
+                    &nbsp;공급사명:&nbsp;
+                    <input
+                        type="text"
+                        style={{ width: "150px" }}
+                        value={searchCondition.vendorName || ""}
+                        onChange={(e) => setSearchCondition({
+                            ...searchCondition,
+                            vendorName: e.target.value
+                        })}
+                    />
+                </label>
+
+                <label>
+                    &nbsp;공급사코드:&nbsp;
+                    <input
+                        type="text"
+                        style={{ width:"150px" }}
+                        value={searchCondition.vendorCode || ""}
+                        onChange={(e) => setSearchCondition({
+                            ...searchCondition,
+                            vendorCode: e.target.value
+                        })}
+                    />
+                </label>
+
+                <label>
+                    &nbsp;납기요청일:&nbsp;
+                    <input
+                        type="date"
+                        style={{ width: "150px" }}
+                        value={searchCondition.deliveryDate || ""}
+                        onChange={(e) => setSearchCondition({
+                            ...searchCondition,
+                            deliveryDate: e.target.value
+                        })}
+                    />
+                </label>
+
+                <label>
+                    &nbsp;발주 상태:&nbsp;
+                    <select
+                        style={{ width: "150px" }}
+                        value={searchCondition.poStatus || ""}
+                        onChange={(e) => setSearchCondition({
+                            ...searchCondition,
+                            poStatus: e.target.value
+                        })}
+                    >
+                        <option value="">전체</option>
+
+                        {poStatuses.map((status) => (
+                            <option key={status.code} value={status.code}>
+                                {status.label}
+                            </option>
+                        ))}
+                    </select>
+                </label>
+
+                <button
+                    type="button"
+                    onClick={handleSearch}  //
+                    style={{ padding: "4px 8px", cursor: "pointer", marginLeft: "10px" }}
+                >
+                    조회
+                </button>
+            </div>
 
             <div style={{ marginBottom: "10px" }}>
                 <Link to="/erp/po/new">
@@ -67,6 +159,7 @@ export default function PoListPage() {
                         }}
                     >
                         <thead>
+
                         <tr>
                             <th style={{ border: "1px solid #ccc", padding: "4px" }}>공급사</th>
                             <th style={{ border: "1px solid #ccc", padding: "4px" }}>납기요청일</th>
@@ -80,7 +173,7 @@ export default function PoListPage() {
                         {poList.length === 0 && (
                             <tr>
                                 <td
-                                    colSpan={5}
+                                    colSpan={6}
                                     style={{ border: "1px solid #ccc", padding: "4px", textAlign: "center" }}
                                 >
                                     데이터가 없습니다.

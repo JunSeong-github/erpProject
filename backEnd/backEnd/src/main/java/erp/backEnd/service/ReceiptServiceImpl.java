@@ -8,6 +8,8 @@ import erp.backEnd.entity.PoItem;
 import erp.backEnd.entity.Receipt;
 import erp.backEnd.entity.ReceiptLine;
 import erp.backEnd.enumeration.PoStatus;
+import erp.backEnd.exception.BusinessException;
+import erp.backEnd.exception.ErrorCode;
 import erp.backEnd.repository.PoRepository;
 import erp.backEnd.repository.ReceiptLineRepository;
 import erp.backEnd.repository.ReceiptRepository;
@@ -19,6 +21,7 @@ import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -33,7 +36,10 @@ public class ReceiptServiceImpl implements ReceiptService {
     @Transactional
     public void createReceipt(Long poId, ReceiptCreateRequest req) {
 
-        Po po = poRepository.findDetail(poId); // vendor + poItems + item fetchJoin 추천
+        Optional<Po> optionalPo = poRepository.findDetail(poId);
+
+        Po po = optionalPo.orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
         if (po == null) throw new IllegalArgumentException("PO 없음");
 
         if (!(po.getPoStatus() == PoStatus.ORDERED || po.getPoStatus() == PoStatus.PARTIAL_RECEIVED)) {

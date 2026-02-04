@@ -8,6 +8,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface PoRepositoryCustom {
 
@@ -15,5 +16,5 @@ public interface PoRepositoryCustom {
 //    List<PoResponse> basicSelect();
     Page<PoResponse> searchPageComplex(PoSearchCondition condition, Pageable pageable);
 
-    Po findDetail(Long id);
+    Optional<Po> findDetail(Long id);
 }

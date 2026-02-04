@@ -22,6 +22,11 @@ logging:
     org.hibernate.SQL: debug
     org.hibernate.orm.jdbc.bind: trace
 
+decorator:
+  datasource:
+    p6spy:
+      enable-logging: true
+
 ---
 # 로컬 프로필: 로컬 MySQL(3306) 사용
 spring:
@@ -29,11 +34,13 @@ spring:
     activate:
       on-profile: local
   datasource:
-      driver-class-name: org.postgresql.Driver
-      url: jdbc:postgresql://dpg-d4vnpb6mcj7s73dqo8ug-a.oregon-postgres.render.com:5432/erpproject_6kix?sslmode=require
-      username: erpproject_6kix_user
-      password: z937tgDijcanBp5IqT9u52p6u6AAGNmO
+#      driver-class-name: org.postgresql.Driver
+#      url: jdbc:postgresql://dpg-d4vnpb6mcj7s73dqo8ug-a.oregon-postgres.render.com:5432/erpproject_6kix?sslmode=require
+#      username: erpproject_6kix_user
+#      password: z937tgDijcanBp5IqT9u52p6u6AAGNmO
 #    url: jdbc:mysql://127.0.0.1:3306/erp?allowPublicKeyRetrieval=true&useSSL=false&characterEncoding=utf8&serverTimezone=Asia/Seoul
-#    username: root
-#    password: 250756
+    driver-class-name: com.p6spy.engine.spy.P6SpyDriver
+    url: jdbc:p6spy:mysql://127.0.0.1:3306/erp?allowPublicKeyRetrieval=true&useSSL=false&characterEncoding=utf8&serverTimezone=Asia/Seoul
+    username: root
+    password: 250756
 

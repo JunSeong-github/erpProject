@@ -40,7 +40,7 @@ public enum ErrorCode {
     NEED_LOGIN(401, "M004", "로그인이 필요합니다."),
     AUTHENTICATION_NOT_FOUND(401, "M005", "Security Context에 인증 정보가 없습니다."),
     USER_ALREADY_LOGOUT(400, "M006", "이미 로그아웃한 상태입니다."),
-    USER_NOT_FOUND(404, "M007", "존재하지 않는 회원입니다."),
+    USER_NOT_FOUND(404, "M007", "존재하지 않는 값입니다."),
     DO_NOT_CREATE_FILE(500, "M008", "파일을 생성할 수 없습니다."),
     DO_NOT_DELETE_FILE(404, "M009", "파일을 삭제할 수 없습니다."),
     PREVIOUSLY_USED_PASSWORD(409, "M010", "이전에 사용한 비밀번호 입니다."),
