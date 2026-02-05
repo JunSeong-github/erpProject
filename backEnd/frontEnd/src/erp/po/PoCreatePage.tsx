@@ -35,9 +35,14 @@ export default function PoCreatePage() {
     const isEdit = Boolean(id);
     const navigate = useNavigate();
     const location = useLocation();
-    const fromPage = (location.state as any)?.page ?? 0;
+    // const fromPage = (location.state as any)?.page ?? 0;
+    //
 
-    const goList = () => navigate(`/erp/po?page=${fromPage}`);
+
+    const statePage = location.state?.page ?? 0;
+    const stateSearchCondition = location.state?.searchCondition ?? {};
+
+    const goList = () => navigate(`/erp/po?page=${statePage}`);
 
     const queryClient = useQueryClient();
 
@@ -89,6 +94,29 @@ export default function PoCreatePage() {
         );
 
     }, [poDetail]);
+
+    const goBackToList = () => {
+        debugger;
+        const params = new URLSearchParams({
+            page: String(statePage)
+        });
+
+        debugger;
+        if (stateSearchCondition.vendorName) {
+            params.append("vendorName", stateSearchCondition.vendorName);
+        }
+        if (stateSearchCondition.vendorCode) {
+            params.append("vendorCode", stateSearchCondition.vendorCode);
+        }
+        if (stateSearchCondition.deliveryDate) {
+            params.append("deliveryDate", stateSearchCondition.deliveryDate);
+        }
+        if (stateSearchCondition.poStatus) {
+            params.append("poStatus", stateSearchCondition.poStatus);
+        }
+        debugger;
+        navigate(`/erp/po?${params.toString()}`);
+    };
 
     // 라인 추가 버튼
     const addLine = () => {
@@ -468,18 +496,28 @@ export default function PoCreatePage() {
                 <div style={{ marginTop: 12 }}>
                     <button
                         type="button"
-                        onClick={() => navigate(`/erp/receipt/${id}`, { state: { page: fromPage } })}
+                        onClick={() => navigate(`/erp/receipt/${id}`, { state: { page: statePage,
+                                searchCondition: stateSearchCondition
+                        } })}
                     >
                         입고 등록 페이지로 이동
                     </button>
                 </div>
             )}
 
+            {/*<button*/}
+            {/*    type="button"*/}
+            {/*    onClick={() => navigate(`/erp/po?page=${fromPage}`)}*/}
+            {/*>*/}
+            {/*    목록으로*/}
+            {/*</button>*/}
+
             <button
                 type="button"
-                onClick={() => navigate(`/erp/po?page=${fromPage}`)}
+                onClick={goBackToList}
+                style={{ marginBottom: "10px" }}
             >
-                목록으로
+                목록
             </button>
 
         </div>

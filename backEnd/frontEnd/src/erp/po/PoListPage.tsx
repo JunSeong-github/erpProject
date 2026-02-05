@@ -9,33 +9,65 @@ export default function PoListPage() {
     const [searchParams, setSearchParams] = useSearchParams();
 
     const initialPage = Math.max(Number(searchParams.get("page") ?? "0"), 0);
+    const initialVendorName = searchParams.get("vendorName") || "";
+    const initialVendorCode = searchParams.get("vendorCode") || "";
+    const initialDeliveryDate = searchParams.get("deliveryDate") || "";
+    const initialPoStatus = searchParams.get("poStatus") || "";
 
-// page 상태
+
     const [page, setPage] = useState(initialPage);
     const pageSize = 10;
 
     const [poStatuses, setPoStatuses] = useState<PoStatusOption[]>([]);
 
+    // const [searchCondition, setSearchCondition] = useState<PoSearchCondition>({
+    //     vendorName: "",
+    //     vendorCode: "",
+    //     deliveryDate: "",
+    //     poStatus: ""
+    // });
+    //
+    // const [appliedCondition, setAppliedCondition] = useState<PoSearchCondition>({});
+
     const [searchCondition, setSearchCondition] = useState<PoSearchCondition>({
-        vendorName: "",
-        vendorCode: "",
-        deliveryDate: "",
-        poStatus: ""
+        vendorName: initialVendorName,
+        vendorCode: initialVendorCode,
+        deliveryDate: initialDeliveryDate,
+        poStatus: initialPoStatus
     });
 
-    const [appliedCondition, setAppliedCondition] = useState<PoSearchCondition>({});
+    const [appliedCondition, setAppliedCondition] = useState<PoSearchCondition>({
+        vendorName: initialVendorName,
+        vendorCode: initialVendorCode,
+        deliveryDate: initialDeliveryDate,
+        poStatus: initialPoStatus
+    });
 
     useEffect(() => {
         getPoStatuses().then(setPoStatuses).catch(console.error);
     }, []);
 
+    const updateUrlParams = (newPage: number, condition: PoSearchCondition) => {
+        const params: Record<string, string> = {
+            page: String(newPage)
+        };
+
+        if (condition.vendorName) params.vendorName = condition.vendorName;
+        if (condition.vendorCode) params.vendorCode = condition.vendorCode;
+        if (condition.deliveryDate) params.deliveryDate = condition.deliveryDate;
+        if (condition.poStatus) params.poStatus = condition.poStatus;
+
+        setSearchParams(params);
+    };
+
     const setPageAndSync = (next: number) => {
         setPage(next);
-        setSearchParams({ page: String(next) });
+        // setSearchParams({ page: String(next) });
+        updateUrlParams(next, appliedCondition);
     };
 
     const { data, isLoading, isError, error, refetch } = useQuery<PageResp<Po>>({
-        queryKey: ["po", page],
+        queryKey: ["po", page, appliedCondition],
         queryFn: () => listPo({ page, size: pageSize, condition: appliedCondition }),
         placeholderData: keepPreviousData,
     });
@@ -56,9 +88,9 @@ export default function PoListPage() {
     const handleSearch = () => {
 
         setPage(0);
-        setSearchParams({ page: "0" });
+        // setSearchParams({ page: "0" });
         setAppliedCondition(searchCondition);
-
+        updateUrlParams(0, searchCondition);
         setTimeout(() => refetch(), 0);
     };
 
@@ -201,7 +233,10 @@ export default function PoListPage() {
                                 <td style={{ border: "1px solid #ccc", padding: "4px" }}>
                                     <button
                                         type="button"
-                                        onClick={() => navigate(po.poStatus === "DRAFT" || po.poStatus === "REJECTED" || po.poStatus === "APPROVED" ? `/erp/po/${po.id}` : `/erp/receipt/${po.id}`, { state: { page } })}
+                                        onClick={() => navigate(po.poStatus === "DRAFT" || po.poStatus === "REJECTED" || po.poStatus === "APPROVED" ? `/erp/po/${po.id}` : `/erp/receipt/${po.id}`,
+                                            { state: { page,
+                                                       searchCondition: appliedCondition
+                                            } })}
                                         style={{ padding: "4px 8px", cursor: "pointer" }}
                                     >
                                         상세보기
