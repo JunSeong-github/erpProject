@@ -1,7 +1,10 @@
 package erp.backEnd.service;
 
+import erp.backEnd.dto.po.ItemCreateRequest;
 import erp.backEnd.dto.po.ItemResponse;
 import erp.backEnd.entity.Item;
+import erp.backEnd.entity.Po;
+import erp.backEnd.enumeration.PoStatus;
 import erp.backEnd.repository.ItemRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -19,5 +22,17 @@ public class ItemServiceImpl implements ItemService {
         return ItemResponse.toListDto(itemDdlList);
     }
 
+    @Override
+    public Item save(ItemCreateRequest req) {
 
+        Item item = Item.of(
+                req.getItemCode(),
+                req.getItemName(),
+                req.getStandardPrice()
+        );
+
+        Item savedItem = itemRepository.save(item);
+
+        return savedItem;
+    }
 }

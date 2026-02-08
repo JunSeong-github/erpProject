@@ -29,4 +29,12 @@ public class Item extends BaseEntity {
 
     @OneToMany(mappedBy = "item") // 일대다관계 이런식으로 매칭되어있는경우에는 fk없는쪽에 mappedby해준다
     private List<PoItem> poItems = new ArrayList<>();
+
+    public static Item of(String itemCode, String itemName, BigDecimal standardPrice){
+        Item item = new Item();
+        item.itemCode=itemCode;
+        item.itemName=itemName;
+        item.standardPrice=standardPrice;
+        return item;
+    }
 }

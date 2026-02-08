@@ -96,12 +96,11 @@ export default function PoCreatePage() {
     }, [poDetail]);
 
     const goBackToList = () => {
-        debugger;
+
         const params = new URLSearchParams({
             page: String(statePage)
         });
 
-        debugger;
         if (stateSearchCondition.vendorName) {
             params.append("vendorName", stateSearchCondition.vendorName);
         }
@@ -114,7 +113,7 @@ export default function PoCreatePage() {
         if (stateSearchCondition.poStatus) {
             params.append("poStatus", stateSearchCondition.poStatus);
         }
-        debugger;
+
         navigate(`/erp/po?${params.toString()}`);
     };
 

@@ -24,9 +24,12 @@ export default function ReceiptCreatePage() {
 
     const navigate = useNavigate();
     const location = useLocation();
-    const fromPage = (location.state as any)?.page ?? 0;
+    // const fromPage = (location.state as any)?.page ?? 0;
 
-    const goList = () => navigate(`/erp/po?page=${fromPage}`);
+    const statePage = location.state?.page ?? 0;
+    const stateSearchCondition = location.state?.searchCondition ?? {};
+
+    const goList = () => navigate(`/erp/po?page=${statePage}`);
 
     // PO 상세 다시 조회해서 화면 구성
     const { data: poDetail, isLoading } = useQuery({
@@ -46,6 +49,28 @@ export default function ReceiptCreatePage() {
     const [saving, setSaving] = useState(false);
 
     const isReceived = poDetail?.poStatus === "RECEIVED";
+
+    const goBackToList = () => {
+
+        const params = new URLSearchParams({
+            page: String(statePage)
+        });
+
+        if (stateSearchCondition.vendorName) {
+            params.append("vendorName", stateSearchCondition.vendorName);
+        }
+        if (stateSearchCondition.vendorCode) {
+            params.append("vendorCode", stateSearchCondition.vendorCode);
+        }
+        if (stateSearchCondition.deliveryDate) {
+            params.append("deliveryDate", stateSearchCondition.deliveryDate);
+        }
+        if (stateSearchCondition.poStatus) {
+            params.append("poStatus", stateSearchCondition.poStatus);
+        }
+
+        navigate(`/erp/po?${params.toString()}`);
+    };
 
     // PO 상세가 로딩되면 라인 초기화
     useEffect(() => {
@@ -241,7 +266,7 @@ export default function ReceiptCreatePage() {
             {/*<div>poStatusLabel: {String(poDetail.poStatusLabel)}</div>*/}
 
             <div style={{ marginTop: 12 }}>
-                <button type="button" onClick={goList}>
+                <button type="button" onClick={goBackToList}>
                     목록으로
                 </button>
                 {canSubmit && (
