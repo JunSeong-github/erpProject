@@ -135,7 +135,7 @@ export async function getDetail(id: number) {
     if (!res.ok) throw new Error("상세 조회 실패");
     return res.json();
 }
-/** 발주 수정 */
+/** 발주 상세조회 */
 
 /** 입고진행 */
 export async function startReceiving(poId: number) {
@@ -195,3 +195,24 @@ export async function getReceiptSummary(poId: number) {
 }
 
 /** 입고 등록내역 */
+
+/** 아이템 등록 */
+
+export type ItemCreateRequest = {
+    itemCode: string;
+    itemName: string;
+    standardPrice: number | string;
+};
+
+export const createItem = (data: ItemCreateRequest) =>
+    api.post<Item>("/items/create", data).then((r) => r.data);
+
+/** 아이템 등록 */
+
+/** 아이템코드 중복체크 */
+
+export const checkItemDuplicate = (itemCode: string) =>
+    api.get<boolean>("/items/checkDuplicate", { params: { itemCode } })
+        .then((r) => r.data);
+
+/** 아이템코드 중복체크 */

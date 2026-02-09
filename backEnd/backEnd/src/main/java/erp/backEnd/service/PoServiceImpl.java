@@ -39,6 +39,8 @@ public class PoServiceImpl implements PoService{
        return poRepository.searchPageComplex(poSearchCondition, pageable);
    }
 
+   @Override
+   @Transactional
    public Po save(PoCreateRequest req) {
 
        Vendor vendor = vendorRepository.findByVendorCode(req.getVendorCode())
@@ -165,7 +167,7 @@ public class PoServiceImpl implements PoService{
 
     }
 
-
+    @Override
     @Transactional
     public void reject(Long id, String reason) {
         Po po = poRepository.findById(id)
@@ -174,7 +176,7 @@ public class PoServiceImpl implements PoService{
         po.reject(reason);
     }
 
-
+    @Override
     @Transactional
     public void startReceiving(Long poId) {
         Po po = poRepository.findById(poId)

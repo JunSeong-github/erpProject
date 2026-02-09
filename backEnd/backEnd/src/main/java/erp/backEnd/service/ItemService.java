@@ -12,5 +12,10 @@ public interface ItemService {
 
     List<ItemResponse> itemFindAll();
 
+    Boolean existsByItemCode(String itemCode);
+
     Item save(ItemCreateRequest itemCreateRequest);
+
+    void update(Long id, ItemCreateRequest itemCreateRequest);
+
 }

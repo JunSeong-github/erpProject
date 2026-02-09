@@ -1,5 +1,6 @@
 package erp.backEnd.entity;
 
+import erp.backEnd.dto.po.ItemCreateRequest;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -37,4 +38,11 @@ public class Item extends BaseEntity {
         item.standardPrice=standardPrice;
         return item;
     }
+
+    public void updateForm(ItemCreateRequest req){
+        this.itemCode=req.getItemCode();
+        this.itemName=req.getItemName();
+        this.standardPrice=req.getStandardPrice();
+    }
+
 }

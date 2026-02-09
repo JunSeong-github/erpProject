@@ -19,15 +19,25 @@ public class ItemController {
 
     private final ItemService itemService;
 
-    @GetMapping
-    public List<ItemResponse> getItems() {
-        return itemService.itemFindAll();
+    @GetMapping("/checkDuplicate")
+    public ResponseEntity<Boolean> checkDuplicate(@RequestParam String itemCode) {
+        boolean isDuplicate = itemService.existsByItemCode(itemCode);
+        return ResponseEntity.ok(isDuplicate);
     }
 
     @PostMapping("/create")
     public ResponseEntity<?> create(@RequestBody ItemCreateRequest itemCreateRequest) {
         Item save = itemService.save(itemCreateRequest);
         return ResponseEntity.ok(save);
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<Void> update(
+            @PathVariable Long id,
+            @RequestBody ItemCreateRequest itemCreateRequest
+    ) {
+        itemService.update(id, itemCreateRequest);
+        return ResponseEntity.ok().build();
     }
 
 }
