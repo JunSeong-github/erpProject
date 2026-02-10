@@ -1,6 +1,7 @@
 import {useParams} from "react-router-dom";
 import {useEffect, useState} from "react";
-import {checkItemDuplicate, createItem, ItemCreateRequest} from "../api";
+import {checkItemDuplicate, createItem, deleteItem, getItemDetail, ItemCreateRequest, updateItem} from "../api";
+import {useQuery} from "@tanstack/react-query";
 
 
 export default function ItemCreatePage(){
@@ -15,8 +16,24 @@ export default function ItemCreatePage(){
     const [isChecking, setIsChecking] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
 
+    const { data:itemDetail } =useQuery({
+        queryKey:["itemDetail", id],
+        queryFn:()=> getItemDetail(Number(id)),
+        enabled:isEdit,
+    });
+
+    useEffect(() => {
+        if(!itemDetail) return;
+
+        setItemCode(itemDetail.itemCode);
+        setItemName(itemDetail.itemName);
+        setStandardPrice(String(itemDetail.standardPrice));
+
+    }, [itemDetail]);
+
     const checkDuplicate = async ()=>{
-        if(itemCode.trim()){
+
+        if(!itemCode.trim()){
             alert("품목코드를 입력해주세요.");
             return;
         }
@@ -24,7 +41,13 @@ export default function ItemCreatePage(){
         setIsChecking(true);
 
         try {
-            const exists = await checkItemDuplicate(itemCode);
+
+            let exists = false;
+
+            if(!(itemDetail && (itemDetail.itemCode==itemCode))){
+                exists = await checkItemDuplicate(itemCode);
+            }
+
             setIsDuplicate(exists);
 
             if (exists) {
@@ -42,7 +65,7 @@ export default function ItemCreatePage(){
     }
 
     const handleSave= async() =>{
-        
+        debugger;
         if(!itemCode){
             alert("품목코드를 입력하세요.");
             return;
@@ -68,7 +91,7 @@ export default function ItemCreatePage(){
             setIsSaving(true);
 
             const url=isEdit
-            ? await createItem(payload) // 수정으로 따로 추가해야함
+            ? await updateItem(Number(id),payload) // 수정
             : await createItem(payload); // 신규등록
 
             alert(isEdit? "수정되었습니다." : "저장되었습니다.");
@@ -78,6 +101,23 @@ export default function ItemCreatePage(){
         } finally {
             setIsSaving(false);
         }
+    };
+
+    const handleDelete = async () => {
+        if (!id) return;
+
+        const ok = confirm("정말로 이 물품을 삭제할까요?");
+        if (!ok) return;
+
+        try{
+            await deleteItem(Number(id));
+
+            alert("삭제되었습니다.")
+        } catch(e){
+            console.error(e);
+            alert("오류 발생");
+        }
+       
     };
 
 
@@ -112,6 +152,7 @@ export default function ItemCreatePage(){
                         type="text"
                         value={itemName}
                         style={{width: "80px"}}
+                        onChange={(e) => setItemName(e.target.value)}
                     />
                 </label>
 
@@ -121,13 +162,18 @@ export default function ItemCreatePage(){
                         type="text"
                         value={standardPrice}
                         style={{width: "80px"}}
+                        onChange={(e) => setStandardPrice(e.target.value)}
                     />
                 </label>
 
             </div>
             
-            <button type="submit" onClick={handleSave}>
+            <button type="button" onClick={handleSave}>
                 {isSaving ? "저장 중..." : isEdit ? "수정" : "저장"}
+            </button>
+
+            <button type="button" onClick={handleDelete}>
+              삭제
             </button>
 
         </div>

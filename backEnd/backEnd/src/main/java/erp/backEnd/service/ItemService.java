@@ -18,4 +18,8 @@ public interface ItemService {
 
     void update(Long id, ItemCreateRequest itemCreateRequest);
 
+    ItemResponse getDetail(Long id);
+
+    void delete(Long id);
+
 }

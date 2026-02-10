@@ -18,7 +18,9 @@ export default function AppHeader() {
         <header style={{ padding: "12px 16px", borderBottom: "1px solid #ddd" }}>
             <nav style={{ display: "flex", gap: 12 }}>
                 {link("/erp/po", "발주")}
-                {link("/erp/po/write", "발주작성")}
+                {link("/erp/po/new", "발주작성")}
+                {link("/erp/item", "품목")}
+                {link("/erp/item/new", "품목작성")}
             </nav>
         </header>
     );

@@ -5,12 +5,15 @@ import erp.backEnd.dto.po.ItemResponse;
 import erp.backEnd.entity.Item;
 import erp.backEnd.entity.Po;
 import erp.backEnd.enumeration.PoStatus;
+import erp.backEnd.exception.BusinessException;
+import erp.backEnd.exception.ErrorCode;
 import erp.backEnd.repository.ItemRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -64,6 +67,25 @@ public class ItemServiceImpl implements ItemService {
 
         item.updateForm(req);
 
+    }
+
+    @Override
+    @Transactional
+    public ItemResponse getDetail(Long id) {
+        Optional<Item> optionalItem = itemRepository.findById(id);
+
+        Item item = optionalItem.orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
+        return ItemResponse.toDto(item);
+    }
+
+    @Override
+    @Transactional
+    public void delete(Long id) {
+        Item item = itemRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("저장된 품목을 찾을 수 없습니다."));
+
+        itemRepository.deleteById(id);
     }
 
 }

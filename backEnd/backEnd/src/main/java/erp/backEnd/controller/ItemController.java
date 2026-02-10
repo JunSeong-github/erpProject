@@ -3,6 +3,7 @@ package erp.backEnd.controller;
 import erp.backEnd.dto.po.ItemCreateRequest;
 import erp.backEnd.dto.po.ItemResponse;
 import erp.backEnd.dto.po.PoCreateRequest;
+import erp.backEnd.dto.po.PoResponse;
 import erp.backEnd.entity.Item;
 import erp.backEnd.entity.Po;
 import erp.backEnd.service.ItemService;
@@ -31,12 +32,24 @@ public class ItemController {
         return ResponseEntity.ok(save);
     }
 
-    @PutMapping("/{id}")
+    @PatchMapping("/update/{id}")
     public ResponseEntity<Void> update(
             @PathVariable Long id,
             @RequestBody ItemCreateRequest itemCreateRequest
     ) {
         itemService.update(id, itemCreateRequest);
+        return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<ItemResponse> getDetail(@PathVariable Long id) {
+        ItemResponse response = itemService.getDetail(id);
+        return ResponseEntity.ok(response);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteItem(@PathVariable Long id) {
+        itemService.delete(id);
         return ResponseEntity.ok().build();
     }
 

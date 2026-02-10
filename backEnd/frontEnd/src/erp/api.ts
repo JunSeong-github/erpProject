@@ -205,14 +205,30 @@ export type ItemCreateRequest = {
 };
 
 export const createItem = (data: ItemCreateRequest) =>
-    api.post<Item>("/items/create", data).then((r) => r.data);
+    api.post<Item>(`${baseUrl}/items/create`, data).then((r) => r.data);
+
+export const updateItem = (id: Number, data: ItemCreateRequest) =>
+    api.patch(`${baseUrl}/items/update/${id}`, data);
 
 /** 아이템 등록 */
 
 /** 아이템코드 중복체크 */
 
 export const checkItemDuplicate = (itemCode: string) =>
-    api.get<boolean>("/items/checkDuplicate", { params: { itemCode } })
+    api.get<boolean>(`${baseUrl}/items/checkDuplicate`, { params: { itemCode } })
         .then((r) => r.data);
 
 /** 아이템코드 중복체크 */
+
+/** 아이템 상세조회  */
+
+export const getItemDetail = (id: number) =>
+    api.get<Item>(`${baseUrl}/items/${id}`).then((r) => r.data);
+/** 아이템 상세조회 */
+
+/** 아이템 삭제 */
+
+export const deleteItem = (id: number) =>
+    api.delete<Item>(`${baseUrl}/items/${id}`).then((r) => r.data);
+
+/** 아이템 삭제 */
