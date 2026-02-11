@@ -1,13 +1,11 @@
 package erp.backEnd.controller;
 
-import erp.backEnd.dto.po.ItemCreateRequest;
-import erp.backEnd.dto.po.ItemResponse;
-import erp.backEnd.dto.po.PoCreateRequest;
-import erp.backEnd.dto.po.PoResponse;
+import erp.backEnd.dto.po.*;
 import erp.backEnd.entity.Item;
-import erp.backEnd.entity.Po;
 import erp.backEnd.service.ItemService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -51,6 +49,12 @@ public class ItemController {
     public ResponseEntity<Void> deleteItem(@PathVariable Long id) {
         itemService.delete(id);
         return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/list")
+    public ResponseEntity<Page<ItemResponse>> list(ItemSearchCondition itemSearchCondition, Pageable pageable) {
+        Page<ItemResponse> List = itemService.findSearchPageComplex(itemSearchCondition, pageable);
+        return ResponseEntity.ok(List);
     }
 
 }

@@ -196,6 +196,12 @@ export async function getReceiptSummary(poId: number) {
 
 /** 입고 등록내역 */
 
+/** 아이템 조회조건 */
+export interface ItemSearchCondition {
+    itemName?: string;
+}
+/** 아이템 조회조건 */
+
 /** 아이템 등록 */
 
 export type ItemCreateRequest = {
@@ -232,3 +238,25 @@ export const deleteItem = (id: number) =>
     api.delete<Item>(`${baseUrl}/items/${id}`).then((r) => r.data);
 
 /** 아이템 삭제 */
+
+/** 아이템 조회 */
+
+export const listItem = (params: {
+    page: number;
+    size: number;
+    condition?: ItemSearchCondition;
+}) => {
+    const queryParams: any = {
+        page: params.page,
+        size: params.size,
+    };
+
+    if (params.condition?.itemName) {
+        queryParams.itemName = params.condition.itemName;
+    }
+
+    return api.get<PageResp<Item>>('/items/list', { params: queryParams })
+        .then((r) => r.data);
+};
+
+/** 아이템 조회 */

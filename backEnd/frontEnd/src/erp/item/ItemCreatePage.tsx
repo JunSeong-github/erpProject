@@ -1,4 +1,4 @@
-import {useParams} from "react-router-dom";
+import {useLocation, useNavigate, useParams} from "react-router-dom";
 import {useEffect, useState} from "react";
 import {checkItemDuplicate, createItem, deleteItem, getItemDetail, ItemCreateRequest, updateItem} from "../api";
 import {useQuery} from "@tanstack/react-query";
@@ -120,6 +120,24 @@ export default function ItemCreatePage(){
        
     };
 
+    const navigate = useNavigate();
+    const location = useLocation();
+    const statePage = location.state?.page ?? 0;
+    const stateSearchCondition = location.state?.searchCondition ?? {};
+
+    const goBackToList = () => {
+
+        const params = new URLSearchParams({
+            page: String(statePage)
+        });
+
+        if (stateSearchCondition.itemName) {
+            params.append("itemName", stateSearchCondition.itemName);
+        }
+
+        navigate(`/erp/item?${params.toString()}`);
+    };
+
 
     return(
         <div>
@@ -174,6 +192,14 @@ export default function ItemCreatePage(){
 
             <button type="button" onClick={handleDelete}>
               삭제
+            </button>
+
+            <button
+                type="button"
+                onClick={goBackToList}
+                style={{ marginBottom: "10px" }}
+            >
+                목록
             </button>
 
         </div>

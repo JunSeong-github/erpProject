@@ -193,6 +193,7 @@ export default function PoListPage() {
                         <thead>
 
                         <tr>
+                            <th style={{ border: "1px solid #ccc", padding: "4px" }}>순번</th>
                             <th style={{ border: "1px solid #ccc", padding: "4px" }}>공급사</th>
                             <th style={{ border: "1px solid #ccc", padding: "4px" }}>납기요청일</th>
                             <th style={{ border: "1px solid #ccc", padding: "4px" }}>상태</th>
@@ -205,7 +206,7 @@ export default function PoListPage() {
                         {poList.length === 0 && (
                             <tr>
                                 <td
-                                    colSpan={6}
+                                    colSpan={7}
                                     style={{ border: "1px solid #ccc", padding: "4px", textAlign: "center" }}
                                 >
                                     데이터가 없습니다.
@@ -213,8 +214,11 @@ export default function PoListPage() {
                             </tr>
                         )}
 
-                        {poList.map((po) => (
+                        {poList.map((po, index) => (
                             <tr key={po.id}>
+                                <td style={{ border: "1px solid #ccc", padding: "4px", textAlign: "center" }}>
+                                    {currentPage * pageSize + index + 1}
+                                </td>
                                 <td style={{ border: "1px solid #ccc", padding: "4px" }}>
                                     {po.vendorName} ({po.vendorCode})
                                 </td>

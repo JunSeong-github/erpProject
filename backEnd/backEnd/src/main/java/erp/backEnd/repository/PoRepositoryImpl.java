@@ -83,16 +83,16 @@ public class PoRepositoryImpl extends QuerydslRepositorySupport implements PoRep
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
                 .fetch();
-        long total = queryFactory
-                .select(po)
-                .from(po)
-                .where(
-                        vendorNameEq(condition.getVendorName()),
-                        vendorCodeEq(condition.getVendorCode()),
-                        poStatusEq(condition.getPoStatus()),
-                        deliveryDateEq(condition.getDeliveryDate())
-                        )
-                .fetchCount();
+//        long total = queryFactory
+//                .select(po)
+//                .from(po)
+//                .where(
+//                        vendorNameEq(condition.getVendorName()),
+//                        vendorCodeEq(condition.getVendorCode()),
+//                        poStatusEq(condition.getPoStatus()),
+//                        deliveryDateEq(condition.getDeliveryDate())
+//                        )
+//                .fetchCount();
 //         return new PageImpl<>(content, pageable, total);
 
         JPAQuery<Po> countQuery = queryFactory

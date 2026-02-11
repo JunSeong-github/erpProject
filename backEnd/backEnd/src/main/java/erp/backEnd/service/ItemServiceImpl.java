@@ -1,7 +1,6 @@
 package erp.backEnd.service;
 
-import erp.backEnd.dto.po.ItemCreateRequest;
-import erp.backEnd.dto.po.ItemResponse;
+import erp.backEnd.dto.po.*;
 import erp.backEnd.entity.Item;
 import erp.backEnd.entity.Po;
 import erp.backEnd.enumeration.PoStatus;
@@ -9,6 +8,8 @@ import erp.backEnd.exception.BusinessException;
 import erp.backEnd.exception.ErrorCode;
 import erp.backEnd.repository.ItemRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -86,6 +87,10 @@ public class ItemServiceImpl implements ItemService {
                 .orElseThrow(() -> new IllegalArgumentException("저장된 품목을 찾을 수 없습니다."));
 
         itemRepository.deleteById(id);
+    }
+
+    public Page<ItemResponse> findSearchPageComplex(ItemSearchCondition itemSearchCondition, Pageable pageable){
+        return itemRepository.searchPageComplex(itemSearchCondition, pageable);
     }
 
 }
