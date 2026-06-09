@@ -1,6 +1,7 @@
 package erp.backEnd.entity;
 
 
+import erp.backEnd.dto.po.VendorCreateRequest;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -23,5 +24,17 @@ public class Vendor extends BaseEntity{
 
     @OneToMany(mappedBy = "vendor") // 일대다관계 이런식으로 매칭되어있는경우에는 fk없는쪽에 mappedby해준다
     private List<Po> po = new ArrayList<>();
+
+    public static Vendor of(String vendorCode, String vendorName) {
+        Vendor vendor = new Vendor();
+        vendor.vendorCode = vendorCode;
+        vendor.vendorName = vendorName;
+        return vendor;
+    }
+
+    public void updateForm(VendorCreateRequest req) {
+        // vendorCode 는 PK 이므로 변경하지 않고 공급사명만 수정
+        this.vendorName = req.getVendorName();
+    }
 
 }

@@ -1,14 +1,224 @@
-/* src/index.css */
-body {
-  margin: 0;
-  font-family: Arial, Helvetica, sans-serif;
-  background: #f9f9f9;
+/* ============================================================
+   ERP 디자인 시스템  ―  Indigo / White 테마
+   * 페이지 컴포넌트(.tsx)는 건드리지 않고 전역 스타일만 정의
+   * 기존 인라인 스타일(테이블 border, button padding 등)은
+     element 셀렉터 + 필요한 곳만 !important 로 덮어써서 외형 통일
+   ============================================================ */
+
+:root {
+    /* 색상 토큰 */
+    --bg: #f1f5f9;            /* slate-100  : 전체 배경 */
+    --surface: #ffffff;      /* 카드/테이블 배경 */
+    --surface-alt: #f8fafc;  /* slate-50   : 헤더/hover */
+    --text: #0f172a;         /* slate-900  : 본문 */
+    --muted: #64748b;        /* slate-500  : 보조 텍스트 */
+    --border: #e2e8f0;       /* slate-200  : 기본 경계선 */
+    --border-strong: #cbd5e1;/* slate-300  : 입력/버튼 경계 */
+
+    --primary: #4f46e5;      /* indigo-600 : 포인트 */
+    --primary-hover: #4338ca;/* indigo-700 */
+    --primary-soft: #eef2ff; /* indigo-50  : 옅은 배경 */
+    --primary-ring: rgba(79, 70, 229, 0.18);
+
+    --danger: #dc2626;
+    --danger-soft: #fef2f2;
+
+    --radius: 10px;
+    --radius-sm: 7px;
+    --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04);
+    --shadow: 0 1px 3px rgba(15, 23, 42, 0.08), 0 1px 2px rgba(15, 23, 42, 0.04);
+    --shadow-md: 0 4px 12px rgba(15, 23, 42, 0.08);
+
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Malgun Gothic", sans-serif;
+    line-height: 1.5;
+    color-scheme: light;
 }
 
 * { box-sizing: border-box; }
-html, body, #root { height: 100%; }
-body { margin: 0; color: #111; background: #fafafa; font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; }
 
-/* 링크 기본 스타일 개선 */
-a { color: inherit; }
-button { cursor: pointer; }
+html, body, #root { height: 100%; }
+
+body {
+    margin: 0;
+    color: var(--text);
+    background: var(--bg);
+    font-family: inherit;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+a { color: var(--primary); text-decoration: none; }
+a:hover { color: var(--primary-hover); }
+
+/* ----------------------------------------------------------
+   타이포그래피
+   ---------------------------------------------------------- */
+h1, h2, h3 {
+    color: var(--text);
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    margin: 0 0 18px;
+}
+h2 {
+    font-size: 22px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+/* h2 앞에 인디고 액센트 바 */
+h2::before {
+    content: "";
+    width: 4px;
+    height: 20px;
+    border-radius: 4px;
+    background: var(--primary);
+    display: inline-block;
+}
+
+label {
+    color: var(--text);
+    font-size: 14px;
+}
+
+/* ----------------------------------------------------------
+   버튼  (모든 <button> 공통 ― 흰 바탕 / 회색 테두리 / hover 인디고)
+   ---------------------------------------------------------- */
+button {
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text);
+    background: var(--surface);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-sm);
+    padding: 7px 14px;
+    cursor: pointer;
+    transition: background .15s ease, border-color .15s ease, color .15s ease, box-shadow .15s ease, transform .05s ease;
+    line-height: 1.2;
+    white-space: nowrap;
+}
+button:hover:not(:disabled) {
+    border-color: var(--primary);
+    color: var(--primary);
+    background: var(--primary-soft);
+}
+button:active:not(:disabled) {
+    transform: translateY(1px);
+}
+button:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px var(--primary-ring);
+    border-color: var(--primary);
+}
+button:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+/* ----------------------------------------------------------
+   폼 요소  input / select / textarea
+   ---------------------------------------------------------- */
+input,
+select,
+textarea {
+    font-family: inherit;
+    font-size: 14px;
+    color: var(--text) !important;
+    background-color: var(--surface) !important;
+    border: 1px solid var(--border-strong) !important;
+    border-radius: var(--radius-sm);
+    padding: 7px 10px;
+    transition: border-color .15s ease, box-shadow .15s ease;
+    vertical-align: middle;
+}
+input:focus,
+select:focus,
+textarea:focus {
+    outline: none;
+    border-color: var(--primary) !important;
+    box-shadow: 0 0 0 3px var(--primary-ring);
+}
+
+/* readonly / disabled : 비활성 느낌의 옅은 회색 */
+input[readonly],
+textarea[readonly],
+select[readonly],
+input:disabled,
+select:disabled,
+textarea:disabled {
+    background-color: var(--surface-alt) !important;
+    color: var(--muted) !important;
+    border-color: var(--border) !important;
+    cursor: not-allowed;
+}
+input[readonly]:focus,
+textarea[readonly]:focus,
+select:disabled:focus {
+    box-shadow: none !important;
+    border-color: var(--border) !important;
+}
+
+/* 검색/필터 줄의 라벨 간격을 살짝 띄워 가독성 향상 */
+label + label,
+label + button {
+    margin-left: 6px;
+}
+
+/* ----------------------------------------------------------
+   테이블  (인라인 border:1px solid #ccc / padding:4px 덮어쓰기)
+   ---------------------------------------------------------- */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+    font-size: 14px;
+    margin-top: 4px;
+}
+table th,
+table td {
+    border: none !important;
+    border-bottom: 1px solid var(--border) !important;
+    padding: 11px 14px !important;
+    text-align: left;
+}
+table thead th {
+    background: var(--surface-alt);
+    color: var(--muted);
+    font-weight: 600;
+    font-size: 12.5px;
+    letter-spacing: 0.02em;
+    text-transform: none;
+    white-space: nowrap;
+    border-bottom: 1px solid var(--border) !important;
+}
+table tbody tr {
+    transition: background .12s ease;
+}
+table tbody tr:hover {
+    background: var(--surface-alt);
+}
+table tbody tr:last-child td {
+    border-bottom: none !important;
+}
+
+/* 표 안의 버튼은 조금 더 컴팩트하게 */
+table td button {
+    padding: 5px 11px;
+    font-size: 13px;
+}
+table td button + button {
+    margin-left: 6px;
+}
+
+/* ----------------------------------------------------------
+   유틸 / 잔여 요소
+   ---------------------------------------------------------- */
+hr { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
+
+::placeholder { color: #94a3b8; }

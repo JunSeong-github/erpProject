@@ -5,6 +5,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;
 
-public interface VendorRepository extends JpaRepository<Vendor, Long>, VendorRepositoryCustom {
+public interface VendorRepository extends JpaRepository<Vendor, String>, VendorRepositoryCustom {
     Optional<Vendor> findByVendorCode(String vendorCode);
+
+    boolean existsByVendorCode(String vendorCode);
 }

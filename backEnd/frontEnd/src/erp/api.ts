@@ -260,3 +260,57 @@ export const listItem = (params: {
 };
 
 /** 아이템 조회 */
+
+
+/** 공급사 조회조건 */
+export interface VendorSearchCondition {
+    vendorCode?: string;
+    vendorName?: string;
+}
+/** 공급사 조회조건 */
+
+/** 공급사 등록요청 */
+export type VendorCreateRequest = {
+    vendorCode: string;
+    vendorName: string;
+};
+
+/** 공급사 등록 */
+export const createVendor = (data: VendorCreateRequest) =>
+    api.post<Vendor>(`${baseUrl}/vendors/create`, data).then((r) => r.data);
+
+/** 공급사 수정 (공급사명) */
+export const updateVendor = (vendorCode: string, data: VendorCreateRequest) =>
+    api.patch(`${baseUrl}/vendors/update/${vendorCode}`, data);
+
+/** 공급사코드 중복체크 */
+export const checkVendorDuplicate = (vendorCode: string) =>
+    api.get<boolean>(`${baseUrl}/vendors/checkDuplicate`, { params: { vendorCode } })
+        .then((r) => r.data);
+
+/** 공급사 상세조회 */
+export const getVendorDetail = (vendorCode: string) =>
+    api.get<Vendor>(`${baseUrl}/vendors/${vendorCode}`).then((r) => r.data);
+
+/** 공급사 삭제 */
+export const deleteVendor = (vendorCode: string) =>
+    api.delete(`${baseUrl}/vendors/${vendorCode}`).then((r) => r.data);
+
+/** 공급사 목록조회(페이징) */
+export const listVendor = (params: {
+    page: number;
+    size: number;
+    condition?: VendorSearchCondition;
+}) => {
+    const queryParams: any = {
+        page: params.page,
+        size: params.size,
+    };
+
+    if (params.condition?.vendorName) queryParams.vendorName = params.condition.vendorName;
+    if (params.condition?.vendorCode) queryParams.vendorCode = params.condition.vendorCode;
+
+    return api.get<PageResp<Vendor>>('/vendors/list', { params: queryParams })
+        .then((r) => r.data);
+};
+/** 공급사 조회 */
