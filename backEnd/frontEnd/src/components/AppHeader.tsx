@@ -68,6 +68,8 @@ export default function AppHeader() {
                 {link("/erp/item/new", "품목작성")}
                 {link("/erp/vendor", "공급사", true)}
                 {link("/erp/vendor/new", "공급사작성")}
+                {link("/erp/stock", "재고", true)}
+                {link("/erp/stock-usage", "재고사용", true)}
             </nav>
         </header>
     );

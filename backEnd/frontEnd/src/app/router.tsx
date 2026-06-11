@@ -11,6 +11,10 @@ import ItemCreatePage from "../erp/item/ItemCreatePage";
 import ItemListPage from "../erp/item/ItemListPage";
 import VendorListPage from "../erp/vendor/VendorListPage";
 import VendorCreatePage from "../erp/vendor/VendorCreatePage";
+import StockListPage from "../erp/stock/StockListPage";
+import StockUsageCreatePage from "../erp/stock/StockUsageCreatePage";
+import StockUsageListPage from "../erp/stock/StockUsageListPage";
+import StockUsageDetailPage from "../erp/stock/StockUsageDetailPage";
 
 
 export const router = createBrowserRouter([
@@ -30,6 +34,10 @@ export const router = createBrowserRouter([
             { path: "/erp/vendor", element: <VendorListPage /> },
             { path: "/erp/vendor/new", element: <VendorCreatePage /> },
             { path: "/erp/vendor/:code", element: <VendorCreatePage /> },
+            { path: "/erp/stock", element: <StockListPage /> },
+            { path: "/erp/stock-usage", element: <StockUsageListPage /> },
+            { path: "/erp/stock-usage/new", element: <StockUsageCreatePage /> },
+            { path: "/erp/stock-usage/:id", element: <StockUsageDetailPage /> },
             { path: "*", element: <Navigate to="/" replace /> },          // 안전망
         ],
     },

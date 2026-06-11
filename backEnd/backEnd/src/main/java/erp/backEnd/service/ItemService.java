@@ -24,4 +24,6 @@ public interface ItemService {
 
     Page<ItemResponse> findSearchPageComplex(ItemSearchCondition condition, Pageable pageable);
 
+    Page<StockResponse> findStockPage(ItemSearchCondition condition, Pageable pageable);
+
 }

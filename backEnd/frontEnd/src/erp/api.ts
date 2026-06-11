@@ -261,6 +261,108 @@ export const listItem = (params: {
 
 /** 아이템 조회 */
 
+/** 재고 */
+export type Stock = {
+    itemId: number;
+    itemCode: string;
+    itemName: string;
+    standardPrice: number | string;
+    stockQty: number;
+};
+
+/** 재고 목록조회(페이징) */
+export const listStock = (params: {
+    page: number;
+    size: number;
+    condition?: ItemSearchCondition;
+}) => {
+    const queryParams: any = {
+        page: params.page,
+        size: params.size,
+    };
+
+    if (params.condition?.itemName) queryParams.itemName = params.condition.itemName;
+
+    return api.get<PageResp<Stock>>('/items/stock', { params: queryParams })
+        .then((r) => r.data);
+};
+/** 재고 조회 */
+
+/** 재고 사용(출고 요청) */
+export type UsageStatusOption = {
+    code: string;
+    label: string;
+};
+
+export const getUsageStatuses = () =>
+    api.get<UsageStatusOption[]>('/stock-usage/statuses').then((r) => r.data);
+
+export interface StockUsageSearchCondition {
+    itemName?: string;
+    status?: string;
+}
+
+export type StockUsage = {
+    id: number;
+    itemId: number;
+    itemCode: string;
+    itemName: string;
+    purpose: string;
+    usagePlace: string;
+    usageQty: number;
+    usageDate?: string;
+    remark?: string;
+    status: string;
+    statusLabel: string;
+    rejectReason?: string;
+    createdDate?: string;
+};
+
+export type StockUsageCreateRequest = {
+    itemId: number;
+    purpose: string;
+    usagePlace: string;
+    usageQty: number;
+    usageDate?: string;
+    remark?: string;
+};
+
+/** 재고 사용 등록 */
+export const createStockUsage = (data: StockUsageCreateRequest) =>
+    api.post<number>('/stock-usage/create', data).then((r) => r.data);
+
+/** 재고 사용 목록조회(페이징) */
+export const listStockUsage = (params: {
+    page: number;
+    size: number;
+    condition?: StockUsageSearchCondition;
+}) => {
+    const queryParams: any = {
+        page: params.page,
+        size: params.size,
+    };
+
+    if (params.condition?.itemName) queryParams.itemName = params.condition.itemName;
+    if (params.condition?.status) queryParams.status = params.condition.status;
+
+    return api.get<PageResp<StockUsage>>('/stock-usage/list', { params: queryParams })
+        .then((r) => r.data);
+};
+
+/** 재고 사용 상세조회 */
+export const getStockUsageDetail = (id: number) =>
+    api.get<StockUsage>(`/stock-usage/${id}`).then((r) => r.data);
+
+/** 재고 사용 승인 */
+export const approveStockUsage = (id: number) =>
+    api.post(`/stock-usage/${id}/approve`).then((r) => r.data);
+
+/** 재고 사용 반려 */
+export const rejectStockUsage = (id: number, reason: string) =>
+    api.post(`/stock-usage/${id}/reject`, { reason }).then((r) => r.data);
+
+/** 재고 사용 */
+
 
 /** 공급사 조회조건 */
 export interface VendorSearchCondition {

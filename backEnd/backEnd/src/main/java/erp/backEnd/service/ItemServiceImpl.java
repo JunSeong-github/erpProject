@@ -93,4 +93,9 @@ public class ItemServiceImpl implements ItemService {
         return itemRepository.searchPageComplex(itemSearchCondition, pageable);
     }
 
+    @Override
+    public Page<StockResponse> findStockPage(ItemSearchCondition itemSearchCondition, Pageable pageable){
+        return itemRepository.searchStockPage(itemSearchCondition, pageable);
+    }
+
 }

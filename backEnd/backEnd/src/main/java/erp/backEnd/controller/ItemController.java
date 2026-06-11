@@ -57,4 +57,10 @@ public class ItemController {
         return ResponseEntity.ok(List);
     }
 
+    @GetMapping("/stock")
+    public ResponseEntity<Page<StockResponse>> stock(ItemSearchCondition itemSearchCondition, Pageable pageable) {
+        Page<StockResponse> page = itemService.findStockPage(itemSearchCondition, pageable);
+        return ResponseEntity.ok(page);
+    }
+
 }

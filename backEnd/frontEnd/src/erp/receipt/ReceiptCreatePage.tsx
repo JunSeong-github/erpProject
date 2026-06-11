@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { createReceipt, getDetail, getReceiptSummary } from "../api";
+import { downloadReceiptExcel, printReceiptPdf, ReceiptExportData } from "./receiptExport";
 
 // 너 PoDetail 타입이 있으면 그걸 쓰고, 없으면 any로 시작해도 됨.
 type ReceiptLineUI = {
@@ -49,6 +50,34 @@ export default function ReceiptCreatePage() {
     const [saving, setSaving] = useState(false);
 
     const isReceived = poDetail?.poStatus === "RECEIVED";
+
+    // 입고진행/부분입고/전체입고 상태에서만 전표 다운로드 노출
+    const canDownload =
+        poDetail?.poStatus === "ORDERED" ||
+        poDetail?.poStatus === "PARTIAL_RECEIVED" ||
+        poDetail?.poStatus === "RECEIVED";
+
+    const buildExportData = (): ReceiptExportData => ({
+        poId: poDetail?.id,
+        vendorName: String(poDetail?.vendorName ?? ""),
+        vendorCode: String(poDetail?.vendorCode ?? ""),
+        deliveryDate: String(poDetail?.deliveryDate ?? ""),
+        poStatusLabel: String(poDetail?.poStatusLabel ?? ""),
+        poEtc: String(poDetail?.etc ?? ""),
+        headerRemark: headerRemark,
+        lines: lines.map((l) => ({
+            itemName: l.itemName,
+            unitPrice: l.unitPrice,
+            orderedQty: l.orderedQty,
+            amount: l.amount,
+            totalReceivedQty: l.totalReceivedQty,
+            remainingQty: l.remainingQty,
+            lineRemark: l.lineRemark,
+        })),
+    });
+
+    const handleDownloadExcel = () => downloadReceiptExcel(buildExportData());
+    const handleDownloadPdf = () => printReceiptPdf(buildExportData());
 
     const goBackToList = () => {
 
@@ -191,7 +220,19 @@ export default function ReceiptCreatePage() {
 
     return (
         <div>
-            <h2>입고 등록</h2>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <h2>입고 등록</h2>
+                {canDownload && (
+                    <div style={{ display: "flex", gap: 8 }}>
+                        <button type="button" onClick={handleDownloadExcel}>
+                            엑셀 다운로드
+                        </button>
+                        <button type="button" onClick={handleDownloadPdf}>
+                            PDF 다운로드
+                        </button>
+                    </div>
+                )}
+            </div>
 
             <div style={{ marginBottom: 12 }}>
                 <div>PO ID: {poDetail.id}</div>
