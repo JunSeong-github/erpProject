@@ -10,11 +10,13 @@ import erp.backEnd.exception.ErrorCode;
 import erp.backEnd.repository.ItemRepository;
 import erp.backEnd.repository.StockUsageRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class StockUsageServiceImpl implements StockUsageService {
@@ -66,8 +68,9 @@ public class StockUsageServiceImpl implements StockUsageService {
         // 승인 시 실재고 차감 → 현재 가용재고보다 많이 사용할 수 없음
         Long currentStock = itemRepository.getCurrentStock(usage.getItem().getId());
         if (usage.getUsageQty() > currentStock) {
-            throw new IllegalArgumentException(
-                    "재고가 부족하여 승인할 수 없습니다. 현재고: " + currentStock + ", 사용요청: " + usage.getUsageQty());
+            log.warn("재고 부족 승인 차단 - itemId={}, 현재고={}, 사용요청={}",
+                    usage.getItem().getId(), currentStock, usage.getUsageQty());
+            throw new BusinessException(ErrorCode.STOCK_NOT_ENOUGH);
         }
 
         usage.approve();

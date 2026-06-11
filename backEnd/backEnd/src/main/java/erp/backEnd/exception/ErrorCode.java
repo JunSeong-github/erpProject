@@ -77,7 +77,10 @@ public enum ErrorCode {
     //system
     MAX_UPLOAD_SIZE_EXCEED(400, "SY001", "허용가능한 파일 업로드 사이즈를 초과하였습니다."),
     CONVERTER_ERROR(404, "SY002", "개인정보 암호화 실패"),
-    WEB_CLIENT_ERROR(404, "SY003", "웹 클라이언트 호출 에러");
+    WEB_CLIENT_ERROR(404, "SY003", "웹 클라이언트 호출 에러"),
+
+    //stock
+    STOCK_NOT_ENOUGH(400, "ST001", "재고가 부족하여 승인할 수 없습니다.");
 
     private int status;
     private String code;
