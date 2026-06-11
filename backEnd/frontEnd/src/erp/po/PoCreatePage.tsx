@@ -4,6 +4,7 @@ import { useParams, useNavigate, useLocation } from "react-router-dom";
 
 import { listItems, listVendors, Item, Vendor, getDetail, approvePo, rejectPo, startReceiving } from "../api";
 import {useEffect, useState} from "react";
+import { useAuth } from "../../app/AuthContext";
 
 
 type PoLine = {
@@ -45,6 +46,9 @@ export default function PoCreatePage() {
     const goList = () => navigate(`/erp/po?page=${statePage}`);
 
     const queryClient = useQueryClient();
+
+    const { user } = useAuth();
+    const isAdmin = user?.role === "ADMIN";
 
     //객체의 state를 저장 및 세팅하는것 꼭 필요함 없으면 데이터를 읽지못함
     const [vendorCode, setVendorCode] = useState("");
@@ -422,7 +426,7 @@ export default function PoCreatePage() {
                 </div>
             )}
 
-            {modified && (
+            {modified && isAdmin && (
                 <div style={{ marginTop: "12px" }}>
                     <button
                         type="button"
@@ -434,7 +438,7 @@ export default function PoCreatePage() {
                 </div>
             )}
 
-            {isEdit && isDraft && (
+            {isEdit && isDraft && isAdmin && (
                 <div style={{ marginTop: "12px" }}>
                     {!showRejectBox ? (
                         <button type="button" onClick={() => setShowRejectBox(true)}>

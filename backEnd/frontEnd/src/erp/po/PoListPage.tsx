@@ -3,10 +3,14 @@ import {useEffect, useState} from "react";
 import { useQuery, keepPreviousData, useMutation, useQueryClient  } from "@tanstack/react-query";
 import { listPo, PageResp, Po, approvePo, PoSearchCondition, getPoStatuses, PoStatusOption } from "../api";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { useAuth } from "../../app/AuthContext";
 
 export default function PoListPage() {
 
     const [searchParams, setSearchParams] = useSearchParams();
+
+    const { user } = useAuth();
+    const isAdmin = user?.role === "ADMIN";
 
     const initialPage = Math.max(Number(searchParams.get("page") ?? "0"), 0);
     const initialVendorName = searchParams.get("vendorName") || "";
@@ -246,7 +250,7 @@ export default function PoListPage() {
                                         상세보기
                                     </button>
 
-                                    {po.poStatus === "DRAFT" && (
+                                    {po.poStatus === "DRAFT" && isAdmin && (
                                         <button
                                             type="button"
                                             onClick={() => approveMutation.mutate(po.id)}

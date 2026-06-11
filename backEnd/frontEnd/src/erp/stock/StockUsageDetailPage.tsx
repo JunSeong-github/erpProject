@@ -7,6 +7,7 @@ import {
     rejectStockUsage,
     StockUsage,
 } from "../api";
+import { useAuth } from "../../app/AuthContext";
 
 const errMsg = (e: any) =>
     e?.response?.headers?.["x-error-detail"] ||
@@ -20,6 +21,8 @@ export default function StockUsageDetailPage() {
     const navigate = useNavigate();
     const location = useLocation();
     const queryClient = useQueryClient();
+    const { user } = useAuth();
+    const isAdmin = user?.role === "ADMIN";
 
     const statePage = location.state?.page ?? 0;
     const stateCondition = location.state?.searchCondition ?? {};
@@ -147,7 +150,7 @@ export default function StockUsageDetailPage() {
                     목록으로
                 </button>
 
-                {isRequested && (
+                {isRequested && isAdmin && (
                     <>
                         <button type="button" onClick={handleApprove} disabled={working}>
                             {working ? "처리 중..." : "승인"}
@@ -162,6 +165,12 @@ export default function StockUsageDetailPage() {
             {!isRequested && (
                 <div style={{ marginTop: 12, color: "#64748b" }}>
                     ※ 이미 {usage.statusLabel} 처리된 건은 승인/반려할 수 없습니다.
+                </div>
+            )}
+
+            {isRequested && !isAdmin && (
+                <div style={{ marginTop: 12, color: "#64748b" }}>
+                    ※ 승인/반려는 관리자만 가능합니다.
                 </div>
             )}
         </div>
