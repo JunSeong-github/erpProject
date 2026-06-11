@@ -4,6 +4,24 @@ import { api } from "../lib/axios";
 const baseUrl = import.meta.env.VITE_API_BASE ?? "http://localhost:8080";
 // const baseUrl = "https://erpproject-pu8e.onrender.com";
 
+/** 인증 */
+export type AuthUser = {
+    loginId: string;
+    username: string;
+    role: string;       // ADMIN / EMPLOYEE
+    roleLabel: string;  // 관리자 / 직원
+};
+
+export const login = (loginId: string, password: string) =>
+    api.post<AuthUser>('/auth/login', { loginId, password }).then((r) => r.data);
+
+export const logout = () =>
+    api.post('/auth/logout').then((r) => r.data);
+
+export const fetchMe = () =>
+    api.get<AuthUser>('/auth/me').then((r) => r.data);
+/** 인증 */
+
 export interface PageResp<T> {
     content: T[];
     totalElements: number;

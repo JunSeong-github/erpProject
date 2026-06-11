@@ -15,12 +15,22 @@ import StockListPage from "../erp/stock/StockListPage";
 import StockUsageCreatePage from "../erp/stock/StockUsageCreatePage";
 import StockUsageListPage from "../erp/stock/StockUsageListPage";
 import StockUsageDetailPage from "../erp/stock/StockUsageDetailPage";
+import LoginPage from "../auth/LoginPage";
+import RequireAuth from "./RequireAuth";
 
 
 export const router = createBrowserRouter([
     {
+        path: "/login",
+        element: <LoginPage />,
+    },
+    {
         path: "/",
-        element: <AppLayout />,
+        element: (
+            <RequireAuth>
+                <AppLayout />
+            </RequireAuth>
+        ),
         children: [
             { path: "/", element: <Navigate to="/erp/po" replace /> },   // ← 기본 리다이렉트
             // { path: "/erp/inv", element: <InventoryPage /> },

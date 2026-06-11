@@ -80,7 +80,10 @@ public enum ErrorCode {
     WEB_CLIENT_ERROR(404, "SY003", "웹 클라이언트 호출 에러"),
 
     //stock
-    STOCK_NOT_ENOUGH(400, "ST001", "재고가 부족하여 승인할 수 없습니다.");
+    STOCK_NOT_ENOUGH(400, "ST001", "재고가 부족하여 승인할 수 없습니다."),
+
+    //auth
+    LOGIN_FAILED(400, "AU001", "아이디 또는 비밀번호가 일치하지 않습니다.");
 
     private int status;
     private String code;

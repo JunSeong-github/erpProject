@@ -1,7 +1,16 @@
 // src/components/AppHeader.tsx
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
+import { useAuth } from "../app/AuthContext";
 
 export default function AppHeader() {
+    const { user, logout } = useAuth();
+    const navigate = useNavigate();
+
+    const handleLogout = async () => {
+        await logout();
+        navigate("/login", { replace: true });
+    };
+
     const link = (to: string, label: string, end?: boolean) => (
         <NavLink
             to={to}
@@ -71,6 +80,43 @@ export default function AppHeader() {
                 {link("/erp/stock", "재고", true)}
                 {link("/erp/stock-usage", "재고사용", true)}
             </nav>
+
+            {user && (
+                <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 12 }}>
+                    <span style={{ fontSize: 13, color: "#475569" }}>
+                        <b style={{ color: "#0f172a" }}>{user.username}</b>
+                        <span
+                            style={{
+                                marginLeft: 6,
+                                padding: "2px 8px",
+                                borderRadius: 999,
+                                fontSize: 11,
+                                fontWeight: 700,
+                                color: user.role === "ADMIN" ? "#4f46e5" : "#0f766e",
+                                background: user.role === "ADMIN" ? "#eef2ff" : "#ccfbf1",
+                            }}
+                        >
+                            {user.roleLabel}
+                        </span>
+                    </span>
+                    <button
+                        type="button"
+                        onClick={handleLogout}
+                        style={{
+                            padding: "6px 12px",
+                            borderRadius: 8,
+                            border: "1px solid #e2e8f0",
+                            background: "#fff",
+                            color: "#475569",
+                            fontSize: 13,
+                            fontWeight: 600,
+                            cursor: "pointer",
+                        }}
+                    >
+                        로그아웃
+                    </button>
+                </div>
+            )}
         </header>
     );
 }
