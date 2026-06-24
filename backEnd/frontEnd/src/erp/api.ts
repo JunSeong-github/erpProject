@@ -122,6 +122,7 @@ export async function listPo(params: { page: number; size: number; condition?: P
 export async function approvePo(id: number) {
     const res = await fetch(`${baseUrl}/po/${id}/approve`, {
         method: "POST",
+        credentials: "include",
     });
 
     if (!res.ok) {
@@ -136,6 +137,7 @@ export async function approvePo(id: number) {
 export async function rejectPo(poId: number, reason: string){
     const res = await fetch(`${baseUrl}/po/${poId}/reject`, {
         method: "POST",
+        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ reason: reason }),
     });

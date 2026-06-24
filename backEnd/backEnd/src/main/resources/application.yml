@@ -3,6 +3,12 @@
 server:
 #  port: 8080
   port: ${PORT:8080}
+  # cross-site(프론트 github.io ↔ 백엔드 onrender.com) 세션 쿠키 전송을 위해 None/Secure 필요
+  servlet:
+    session:
+      cookie:
+        same-site: none
+        secure: true
 
 spring:
   profiles:
