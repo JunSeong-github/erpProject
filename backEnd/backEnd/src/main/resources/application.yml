@@ -35,8 +35,20 @@ spring:
     activate:
       on-profile: local
   datasource:
-    driver-class-name: com.p6spy.engine.spy.P6SpyDriver
-    url: jdbc:p6spy:mysql://${DB_HOST:127.0.0.1}:${DB_PORT:3306}/${DB_NAME:erp}?allowPublicKeyRetrieval=true&useSSL=false&characterEncoding=utf8&serverTimezone=Asia/Seoul
-    username: ${DB_USERNAME:root}
-    password: ${DB_PASSWORD:}
+#    mysql로컬에서확인할떄
+#    driver-class-name: com.p6spy.engine.spy.P6SpyDriver
+#    url: jdbc:p6spy:mysql://${DB_HOST:127.0.0.1}:${DB_PORT:3306}/${DB_NAME:erp}?allowPublicKeyRetrieval=true&useSSL=false&characterEncoding=utf8&serverTimezone=Asia/Seoul
+#    username: ${DB_USERNAME:root}
+#    password: ${DB_PASSWORD:250756}
+
+#    render배포할때
+#    접속 정보는 환경변수로 주입 (Render Environment에 DB_URL / DB_USERNAME / DB_PASSWORD 등록)
+    driver-class-name: org.postgresql.Driver
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+#    url: jdbc:postgresql://junseong:******@dpg-d8tvgef7f7vs73fm3720-a.oregon-postgres.render.com/erp_c2jy
+#    username: erpproject_6kix_user
+#    password: ******
+
 
