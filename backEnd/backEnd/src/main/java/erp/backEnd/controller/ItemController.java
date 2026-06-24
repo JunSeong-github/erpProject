@@ -18,6 +18,12 @@ public class ItemController {
 
     private final ItemService itemService;
 
+    // 품목 전체 목록 (발주작성 화면 드롭다운 등에서 사용)
+    @GetMapping
+    public List<ItemResponse> getItems() {
+        return itemService.itemFindAll();
+    }
+
     @GetMapping("/checkDuplicate")
     public ResponseEntity<Boolean> checkDuplicate(@RequestParam String itemCode) {
         boolean isDuplicate = itemService.existsByItemCode(itemCode);
