@@ -10,7 +10,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(name = "receipt")
+@Table(name = "receipt", indexes = {
+        // findTopByPo_IdOrderByIdDesc(WHERE po_id=? ORDER BY receipt_id DESC) 커버용 복합 인덱스
+        @Index(name = "idx_receipt_po", columnList = "po_id, receipt_id")
+})
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Receipt extends BaseEntity {

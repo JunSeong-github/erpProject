@@ -9,6 +9,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
+@Table(name = "item", indexes = {
+        // 재고/품목 목록 정렬(ORDER BY item_name ASC) + 페이징용 인덱스
+        @Index(name = "idx_item_name", columnList = "item_name")
+})
 @Getter
 @Builder
 @AllArgsConstructor
@@ -19,7 +23,7 @@ public class Item extends BaseEntity {
     @Column(name="item_id", comment = "품목번호") // db테이블명_// pk컬럼명
     private Long id;
 
-    @Column(name ="item_code", nullable = false, comment = "품목코드 문서작성할때 필요함")
+    @Column(name ="item_code", nullable = false, unique = true, comment = "품목코드 문서작성할때 필요함")
     private String itemCode;
     
     @Column(name ="item_name", nullable = false, comment = "품목명")

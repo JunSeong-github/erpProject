@@ -10,6 +10,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
+@Table(name = "po", indexes = {
+        // 발주 목록 조회 시 공급사 조인용 FK 인덱스
+        @Index(name = "idx_po_vendor", columnList = "vendor_code"),
+        // 목록 정렬(ORDER BY created_date DESC) + 페이징용 인덱스
+        @Index(name = "idx_po_created_date", columnList = "created_date")
+})
 @Getter
 @Builder
 @AllArgsConstructor

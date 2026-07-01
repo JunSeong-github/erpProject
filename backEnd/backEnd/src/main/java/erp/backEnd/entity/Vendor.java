@@ -10,6 +10,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
+@Table(name = "vendor", indexes = {
+        // 공급사 목록 정렬(ORDER BY created_date DESC) + 페이징용 인덱스
+        @Index(name = "idx_vendor_created_date", columnList = "created_date")
+})
 @Getter
 @Builder
 @AllArgsConstructor

@@ -8,6 +8,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
+@Table(name = "po_item", indexes = {
+        // sumReceivedByPoItem(WHERE po_id=?), deleteByPo, Po 상세조회 조인용 FK 인덱스
+        @Index(name = "idx_po_item_po", columnList = "po_id"),
+        // 품목 조인용 FK 인덱스
+        @Index(name = "idx_po_item_item", columnList = "item_id")
+})
 @Getter
 @Builder
 @AllArgsConstructor
