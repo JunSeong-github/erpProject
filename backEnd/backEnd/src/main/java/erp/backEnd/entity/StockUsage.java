@@ -9,7 +9,10 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDate;
 
 @Entity
-@Table(name = "stock_usage")
+@Table(name = "stock_usage", indexes = {
+        // 재고 조회 시 (품목별 + 승인상태) 사용량 집계를 인덱스로 처리하기 위한 복합 인덱스
+        @Index(name = "idx_stock_usage_item_status", columnList = "item_id, status")
+})
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class StockUsage extends BaseEntity {
