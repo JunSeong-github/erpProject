@@ -42,8 +42,8 @@ dependencies {
 	implementation 'p6spy:p6spy:3.9.1'
 	implementation 'com.github.gavlyukovskiy:p6spy-spring-boot-starter:1.9.2'
 
-	//DB
-//	implementation 'com.mysql:mysql-connector-j'
+	//DB - 두 드라이버 모두 포함(프로필로 분기): local=MySQL, prod=PostgreSQL
+	implementation 'com.mysql:mysql-connector-j'
 	runtimeOnly 'org.postgresql:postgresql'
 
 	//swagger

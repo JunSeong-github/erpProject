@@ -3,16 +3,11 @@
 server:
 #  port: 8080
   port: ${PORT:8080}
-  # cross-site(프론트 github.io ↔ 백엔드 onrender.com) 세션 쿠키 전송을 위해 None/Secure 필요
-  servlet:
-    session:
-      cookie:
-        same-site: none
-        secure: true
 
 spring:
   profiles:
     # 로컬에서 별도 지정 안 하면 'local'이 기본 적용됨
+    # Render 배포 시 환경변수 SPRING_PROFILES_ACTIVE=prod 로 지정
     default: local
 
   jpa:
@@ -35,26 +30,36 @@ decorator:
 
 ---
 # 로컬 프로필: 로컬 MySQL(3306) 사용
-# 접속 정보는 환경변수로 주입 (DB_USERNAME / DB_PASSWORD)
+# 접속 정보는 환경변수로 주입 (없으면 기본값 root / 250756 / erp 사용)
 spring:
   config:
     activate:
       on-profile: local
   datasource:
-#    mysql로컬에서확인할떄
-#    driver-class-name: com.p6spy.engine.spy.P6SpyDriver
-#    url: jdbc:p6spy:mysql://${DB_HOST:127.0.0.1}:${DB_PORT:3306}/${DB_NAME:erp}?allowPublicKeyRetrieval=true&useSSL=false&characterEncoding=utf8&serverTimezone=Asia/Seoul
-#    username: ${DB_USERNAME:root}
-#    password: ${DB_PASSWORD:250756}
+    driver-class-name: com.p6spy.engine.spy.P6SpyDriver
+    url: jdbc:p6spy:mysql://${DB_HOST:127.0.0.1}:${DB_PORT:3306}/${DB_NAME:erp}?allowPublicKeyRetrieval=true&useSSL=false&characterEncoding=utf8&serverTimezone=Asia/Seoul
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:250756}
 
-#    render배포할때
-#    접속 정보는 환경변수로 주입 (Render Environment에 DB_URL / DB_USERNAME / DB_PASSWORD 등록)
+# 로컬은 http라 secure 쿠키가 안 붙으므로 기본값(lax, non-secure) 사용 → 세션 로그인 정상 동작
+
+---
+# 운영 프로필(Render): PostgreSQL 사용
+# 접속 정보는 환경변수로 주입 (Render Environment에 DB_URL / DB_USERNAME / DB_PASSWORD 등록)
+spring:
+  config:
+    activate:
+      on-profile: prod
+  datasource:
     driver-class-name: org.postgresql.Driver
     url: ${DB_URL}
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
-#    url: jdbc:postgresql://junseong:******@dpg-d8tvgef7f7vs73fm3720-a.oregon-postgres.render.com/erp_c2jy
-#    username: erpproject_6kix_user
-#    password: ******
 
-
+# cross-site(프론트 github.io ↔ 백엔드 onrender.com) 세션 쿠키 전송을 위해 None/Secure 필요
+server:
+  servlet:
+    session:
+      cookie:
+        same-site: none
+        secure: true
