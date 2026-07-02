@@ -177,9 +177,15 @@ export default function PoListPage() {
                 </button>
             </div>
 
-            <div style={{ marginBottom: "10px" }}>
+            <div style={{ marginBottom: "10px", display: "flex", gap: "8px" }}>
                 <Link to="/erp/po/new">
                     <button type="button">새 발주 작성</button>
+                </Link>
+                <Link to="/erp/po/bulk">
+                    <button type="button">대량 발주 업로드</button>
+                </Link>
+                <Link to="/erp/receipt/bulk">
+                    <button type="button">대량 입고 업로드</button>
                 </Link>
             </div>
 
@@ -201,6 +207,7 @@ export default function PoListPage() {
                             <th style={{ border: "1px solid #ccc", padding: "4px" }}>공급사</th>
                             <th style={{ border: "1px solid #ccc", padding: "4px" }}>납기요청일</th>
                             <th style={{ border: "1px solid #ccc", padding: "4px" }}>상태</th>
+                            <th style={{ border: "1px solid #ccc", padding: "4px" }}>발주번호</th>
                             <th style={{ border: "1px solid #ccc", padding: "4px" }}>비고</th>
                             <th style={{ border: "1px solid #ccc", padding: "4px" }}>생성일</th>
                             <th style={{ border: "1px solid #ccc", padding: "4px" }}>관리</th>
@@ -210,7 +217,7 @@ export default function PoListPage() {
                         {poList.length === 0 && (
                             <tr>
                                 <td
-                                    colSpan={7}
+                                    colSpan={8}
                                     style={{ border: "1px solid #ccc", padding: "4px", textAlign: "center" }}
                                 >
                                     데이터가 없습니다.
@@ -231,6 +238,9 @@ export default function PoListPage() {
                                 </td>
                                 <td style={{ border: "1px solid #ccc", padding: "4px" }}>
                                     {po.poStatusLabel}
+                                </td>
+                                <td style={{ border: "1px solid #ccc", padding: "4px", textAlign: "center" }}>
+                                    {po.id}
                                 </td>
                                 <td style={{ border: "1px solid #ccc", padding: "4px" }}>
                                     {po.etc}

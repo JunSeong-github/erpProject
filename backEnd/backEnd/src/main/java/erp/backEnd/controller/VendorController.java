@@ -1,5 +1,7 @@
 package erp.backEnd.controller;
 
+import erp.backEnd.dto.po.BulkVendorPreviewResponse;
+import erp.backEnd.dto.po.BulkVendorResponse;
 import erp.backEnd.dto.po.VendorCreateRequest;
 import erp.backEnd.dto.po.VendorResponse;
 import erp.backEnd.dto.po.VendorSearchCondition;
@@ -10,6 +12,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -37,6 +40,13 @@ public class VendorController {
     @GetMapping("/checkDuplicate")
     public ResponseEntity<Boolean> checkDuplicate(@RequestParam String vendorCode) {
         boolean isDuplicate = vendorService.existsByVendorCode(vendorCode);
+        return ResponseEntity.ok(isDuplicate);
+    }
+
+    // 공급사명 중복 체크
+    @GetMapping("/checkDuplicateName")
+    public ResponseEntity<Boolean> checkDuplicateName(@RequestParam String vendorName) {
+        boolean isDuplicate = vendorService.existsByVendorName(vendorName);
         return ResponseEntity.ok(isDuplicate);
     }
 
@@ -69,6 +79,18 @@ public class VendorController {
     public ResponseEntity<Void> delete(@PathVariable String vendorCode) {
         vendorService.delete(vendorCode);
         return ResponseEntity.ok().build();
+    }
+
+    // [대량 공급사 - 미리보기] 파싱+검증만, 저장 X
+    @PostMapping(value = "/bulk/preview", consumes = "multipart/form-data")
+    public ResponseEntity<BulkVendorPreviewResponse> bulkPreview(@RequestParam("file") MultipartFile file) {
+        return ResponseEntity.ok(vendorService.bulkPreview(file));
+    }
+
+    // [대량 공급사 - 확정 저장] 오류 없으면 batch insert, 있으면 전체 롤백
+    @PostMapping(value = "/bulk/upload", consumes = "multipart/form-data")
+    public ResponseEntity<BulkVendorResponse> bulkUpload(@RequestParam("file") MultipartFile file) {
+        return ResponseEntity.ok(vendorService.bulkUpload(file));
     }
 
 }

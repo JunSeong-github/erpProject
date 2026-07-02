@@ -284,6 +284,12 @@ export default function PoCreatePage() {
         <div>
             <h2>{isEdit ? "발주 수정" : "발주 작성"}</h2>
 
+            {isEdit && poDetail?.id != null && (
+                <div style={{ marginBottom: "8px", fontWeight: 700 }}>
+                    발주번호: {poDetail.id}
+                </div>
+            )}
+
             <div>
             <label>
                 공급사정보 :&nbsp;
@@ -344,7 +350,7 @@ export default function PoCreatePage() {
                                 <option value="">선택</option>
                                 {items.map((item) => (
                                     <option key={item.id} value={item.id}>
-                                        {item.itemName} ({item.standardPrice}원)
+                                        {item.itemName} [{item.itemCode}] ({item.standardPrice}원)
                                     </option>
                                 ))}
                             </select>

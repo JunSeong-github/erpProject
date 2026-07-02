@@ -1,5 +1,7 @@
 package erp.backEnd.controller;
 
+import erp.backEnd.dto.po.BulkPoPreviewResponse;
+import erp.backEnd.dto.po.BulkPoResponse;
 import erp.backEnd.dto.po.PoCreateRequest;
 import erp.backEnd.dto.po.PoRejectRequest;
 import erp.backEnd.dto.po.PoResponse;
@@ -12,6 +14,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Arrays;
 import java.util.List;
@@ -92,6 +95,24 @@ public class PoController {
     public ResponseEntity<Void> startReceiving(@PathVariable Long id) {
         poService.startReceiving(id);
         return ResponseEntity.ok().build();
+    }
+
+    /**
+     * [대량 발주 - 미리보기] 엑셀 파일을 파싱+검증만 하고 저장하지 않는다.
+     * 행별 정상/오류를 반환하므로, 프론트에서 오류 행을 표시하고 오류가 있으면 확정을 막는다.
+     */
+    @PostMapping(value = "/bulk/preview", consumes = "multipart/form-data")
+    public ResponseEntity<BulkPoPreviewResponse> bulkPreview(@RequestParam("file") MultipartFile file) {
+        return ResponseEntity.ok(poService.bulkPreview(file));
+    }
+
+    /**
+     * [대량 발주 - 확정 저장] 엑셀 파일을 다시 파싱+검증한 뒤 batch insert 로 저장한다(DRAFT).
+     * 오류가 하나라도 있으면 전체 롤백된다.
+     */
+    @PostMapping(value = "/bulk/upload", consumes = "multipart/form-data")
+    public ResponseEntity<BulkPoResponse> bulkUpload(@RequestParam("file") MultipartFile file) {
+        return ResponseEntity.ok(poService.bulkUpload(file));
     }
 
 }

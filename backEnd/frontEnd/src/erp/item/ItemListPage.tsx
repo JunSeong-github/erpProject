@@ -86,9 +86,12 @@ export default function ItemListPage(){
 
             </div>
 
-            <div style={{ marginBottom: "10px" }}>
+            <div style={{ marginBottom: "10px", display: "flex", gap: "8px" }}>
                 <Link to="/erp/item/new">
                     <button type="button">새 물품 추가</button>
+                </Link>
+                <Link to="/erp/item/bulk">
+                    <button type="button">대량 품목 업로드</button>
                 </Link>
             </div>
 

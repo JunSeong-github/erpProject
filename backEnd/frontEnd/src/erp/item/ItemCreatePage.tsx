@@ -1,6 +1,6 @@
 import {useLocation, useNavigate, useParams} from "react-router-dom";
 import {useEffect, useState} from "react";
-import {checkItemDuplicate, createItem, deleteItem, getItemDetail, ItemCreateRequest, updateItem} from "../api";
+import {checkItemDuplicate, checkItemNameDuplicate, createItem, deleteItem, getItemDetail, updateItem} from "../api";
 import {useQuery} from "@tanstack/react-query";
 
 
@@ -12,8 +12,10 @@ export default function ItemCreatePage(){
     const [itemCode, setItemCode] = useState("");
     const [itemName, setItemName] = useState("");
     const [standardPrice, setStandardPrice] = useState("");
-    const [isDuplicate, setIsDuplicate] = useState(false);
+    const [codeOk, setCodeOk] = useState(false);       // 품목코드 중복확인 통과 여부
+    const [nameOk, setNameOk] = useState(false);       // 품목이름 중복확인 통과 여부
     const [isChecking, setIsChecking] = useState(false);
+    const [isCheckingName, setIsCheckingName] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
 
     const { data:itemDetail } =useQuery({
@@ -28,6 +30,9 @@ export default function ItemCreatePage(){
         setItemCode(itemDetail.itemCode);
         setItemName(itemDetail.itemName);
         setStandardPrice(String(itemDetail.standardPrice));
+        // 수정 진입 시 기존 값은 이미 유효하므로 통과 상태로 시작
+        setCodeOk(true);
+        setNameOk(true);
 
     }, [itemDetail]);
 
@@ -38,34 +43,53 @@ export default function ItemCreatePage(){
             return;
         }
 
+        // 수정 중 기존 코드 그대로면 통과 처리
+        if(itemDetail && itemDetail.itemCode === itemCode){
+            setCodeOk(true);
+            alert("사용 가능한 품목코드입니다.");
+            return;
+        }
+
         setIsChecking(true);
-
         try {
-
-            let exists = false;
-
-            if(!(itemDetail && (itemDetail.itemCode==itemCode))){
-                exists = await checkItemDuplicate(itemCode);
-            }
-
-            setIsDuplicate(exists);
-
-            if (exists) {
-                alert("이미 존재하는 품목코드입니다.");
-            } else {
-                alert("사용 가능한 품목코드입니다.");
-            }
+            const exists = await checkItemDuplicate(itemCode);
+            setCodeOk(!exists);
+            alert(exists ? "이미 존재하는 품목코드입니다." : "사용 가능한 품목코드입니다.");
         } catch (error) {
             console.error(error);
             alert("중복 체크에 실패했습니다.");
         } finally {
             setIsChecking(false);
         }
+    }
 
+    const checkNameDuplicate = async ()=>{
+
+        if(!itemName.trim()){
+            alert("품목이름을 입력해주세요.");
+            return;
+        }
+
+        if(itemDetail && itemDetail.itemName === itemName){
+            setNameOk(true);
+            alert("사용 가능한 품목이름입니다.");
+            return;
+        }
+
+        setIsCheckingName(true);
+        try {
+            const exists = await checkItemNameDuplicate(itemName);
+            setNameOk(!exists);
+            alert(exists ? "이미 존재하는 품목이름입니다." : "사용 가능한 품목이름입니다.");
+        } catch (error) {
+            console.error(error);
+            alert("중복 체크에 실패했습니다.");
+        } finally {
+            setIsCheckingName(false);
+        }
     }
 
     const handleSave= async() =>{
-        debugger;
         if(!itemCode){
             alert("품목코드를 입력하세요.");
             return;
@@ -81,6 +105,16 @@ export default function ItemCreatePage(){
             return;
         }
 
+        if(!codeOk){
+            alert("품목코드 중복확인을 해주세요.");
+            return;
+        }
+
+        if(!nameOk){
+            alert("품목이름 중복확인을 해주세요.");
+            return;
+        }
+
         const payload ={
             itemCode:itemCode,
             itemName:itemName,
@@ -90,11 +124,14 @@ export default function ItemCreatePage(){
         try{
             setIsSaving(true);
 
-            const url=isEdit
-            ? await updateItem(Number(id),payload) // 수정
-            : await createItem(payload); // 신규등록
+            if(isEdit){
+                await updateItem(Number(id),payload); // 수정
+            } else {
+                await createItem(payload); // 신규등록
+            }
 
             alert(isEdit? "수정되었습니다." : "저장되었습니다.");
+            if(!isEdit) goBackToList();
         } catch (e){
             console.error(e);
             alert("오류 발생");
@@ -113,11 +150,12 @@ export default function ItemCreatePage(){
             await deleteItem(Number(id));
 
             alert("삭제되었습니다.")
-        } catch(e){
+            goBackToList();
+        } catch(e: any){
             console.error(e);
-            alert("오류 발생");
+            alert(e?.response?.data?.message ?? e?.message ?? "오류 발생");
         }
-       
+
     };
 
     const navigate = useNavigate();
@@ -152,7 +190,7 @@ export default function ItemCreatePage(){
                         style={{width: "80px"}}
                         onChange={(e) =>{
                             setItemCode(e.target.value);
-                            setIsDuplicate(false);
+                            setCodeOk(false);
                         }}
                     />
 
@@ -165,17 +203,28 @@ export default function ItemCreatePage(){
                 </button>
 
                 <label>
-                    품목 이름 :&nbsp;
+                    &nbsp;품목 이름 :&nbsp;
                     <input
                         type="text"
                         value={itemName}
                         style={{width: "80px"}}
-                        onChange={(e) => setItemName(e.target.value)}
+                        onChange={(e) => {
+                            setItemName(e.target.value);
+                            setNameOk(false);
+                        }}
                     />
                 </label>
 
+                <button
+                    type="button"
+                    onClick={checkNameDuplicate}
+                    disabled={isCheckingName}
+                >
+                    {isCheckingName ? "확인중..." : "중복확인"}
+                </button>
+
                 <label>
-                    품목 가격 :&nbsp;
+                    &nbsp;품목 가격 :&nbsp;
                     <input
                         type="text"
                         value={standardPrice}
@@ -185,14 +234,16 @@ export default function ItemCreatePage(){
                 </label>
 
             </div>
-            
-            <button type="button" onClick={handleSave}>
+
+            <button type="button" onClick={handleSave} disabled={isSaving}>
                 {isSaving ? "저장 중..." : isEdit ? "수정" : "저장"}
             </button>
 
-            <button type="button" onClick={handleDelete}>
-              삭제
-            </button>
+            {isEdit && (
+                <button type="button" onClick={handleDelete}>
+                  삭제
+                </button>
+            )}
 
             <button
                 type="button"

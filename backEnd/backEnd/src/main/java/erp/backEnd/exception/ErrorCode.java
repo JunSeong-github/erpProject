@@ -81,6 +81,10 @@ public enum ErrorCode {
 
     //stock
     STOCK_NOT_ENOUGH(400, "ST001", "재고가 부족하여 승인할 수 없습니다."),
+    ITEM_HAS_STOCK(409, "ST002", "재고가 남아있는 품목은 삭제할 수 없습니다."),
+
+    //vendor
+    VENDOR_IN_USE(409, "VD001", "발주에 사용된 공급사는 삭제할 수 없습니다."),
 
     //auth
     LOGIN_FAILED(400, "AU001", "아이디 또는 비밀번호가 일치하지 않습니다.");

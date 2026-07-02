@@ -18,6 +18,12 @@ spring:
         format_sql: true
         highlight_sql: true # (옵션) 색깔 강조
 
+  # 엑셀 대량 입고 업로드용 멀티파트 크기 제한 (초과 시 MaxUploadSizeExceededException → GlobalExceptionHandler 처리)
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+
 logging:
   level:
     org.hibernate.SQL: debug
@@ -37,7 +43,8 @@ spring:
       on-profile: local
   datasource:
     driver-class-name: com.p6spy.engine.spy.P6SpyDriver
-    url: jdbc:p6spy:mysql://${DB_HOST:127.0.0.1}:${DB_PORT:3306}/${DB_NAME:erp}?allowPublicKeyRetrieval=true&useSSL=false&characterEncoding=utf8&serverTimezone=Asia/Seoul
+    # rewriteBatchedStatements=true : JDBC batch insert 를 실제로 multi-row 로 묶어 보냄(대량 입고 성능)
+    url: jdbc:p6spy:mysql://${DB_HOST:127.0.0.1}:${DB_PORT:3306}/${DB_NAME:erp}?allowPublicKeyRetrieval=true&useSSL=false&characterEncoding=utf8&serverTimezone=Asia/Seoul&rewriteBatchedStatements=true
     username: ${DB_USERNAME:root}
     password: ${DB_PASSWORD:250756}
 
@@ -46,6 +53,8 @@ spring:
 ---
 # 운영 프로필(Render): PostgreSQL 사용
 # 접속 정보는 환경변수로 주입 (Render Environment에 DB_URL / DB_USERNAME / DB_PASSWORD 등록)
+# ※ 대량 입고 batch 성능을 위해 DB_URL 에 reWriteBatchedInserts=true 파라미터를 추가할 것
+#   예) jdbc:postgresql://.../erp_c2jy?reWriteBatchedInserts=true
 spring:
   config:
     activate:

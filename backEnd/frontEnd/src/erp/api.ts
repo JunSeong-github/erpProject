@@ -204,6 +204,106 @@ export async function createReceipt(poId: number, req: ReceiptCreateRequest) {
 
 /** 입고 등록내역 */
 
+/** 대량 입고 엑셀 업로드 (2단계: 미리보기 → 확정) */
+
+// 미리보기 한 행(백엔드 BulkReceiptPreviewResponse.PreviewRow 와 매핑)
+export type BulkPreviewRow = {
+    rowNo: number;
+    poId: number | null;
+    poItemId: number | null;
+    itemCode: string | null;
+    itemName: string | null;
+    receivedQty: number | null;
+    receiptDate: string | null;
+    remark: string | null;
+    lineRemark: string | null;
+    valid: boolean;
+    error: string | null;
+};
+
+export type BulkPreviewResponse = {
+    totalRows: number;
+    validRows: number;
+    errorRows: number;
+    confirmable: boolean;
+    rows: BulkPreviewRow[];
+};
+
+export type BulkReceiptResult = {
+    totalRows: number;
+    successRows: number;
+    failRows: number;
+    createdReceipts: number;
+    errors: { row: number; message: string }[];
+};
+
+/** 엑셀 업로드 → 파싱+검증만(저장 X). 행별 정상/오류를 돌려준다. */
+export const previewReceiptBulk = (file: File) => {
+    const fd = new FormData();
+    fd.append("file", file);
+    return api.post<BulkPreviewResponse>("/receipt/bulk/preview", fd).then((r) => r.data);
+};
+
+/** 미리보기에서 오류가 없을 때, 같은 파일을 확정 저장(batch insert). */
+export const uploadReceiptBulk = (file: File) => {
+    const fd = new FormData();
+    fd.append("file", file);
+    return api.post<BulkReceiptResult>("/receipt/bulk/upload", fd).then((r) => r.data);
+};
+
+/** 대량 입고 엑셀 업로드 */
+
+/** 대량 발주 엑셀 업로드 (2단계: 미리보기 → 확정) */
+
+export type BulkPoPreviewRow = {
+    rowNo: number;
+    groupLabel: string | null;
+    vendorCode: string | null;
+    vendorName: string | null;
+    itemCode: string | null;
+    itemName: string | null;
+    quantity: number | null;
+    unitPrice: number | null;
+    amount: number | null;
+    deliveryDate: string | null;
+    etc: string | null;
+    valid: boolean;
+    error: string | null;
+};
+
+export type BulkPoPreviewResponse = {
+    totalRows: number;
+    validRows: number;
+    errorRows: number;
+    poCount: number;
+    confirmable: boolean;
+    rows: BulkPoPreviewRow[];
+};
+
+export type BulkPoResult = {
+    totalRows: number;
+    successRows: number;
+    failRows: number;
+    createdPos: number;
+    errors: { row: number; message: string }[];
+};
+
+/** 엑셀 업로드 → 파싱+검증만(저장 X). 행별 정상/오류를 돌려준다. */
+export const previewPoBulk = (file: File) => {
+    const fd = new FormData();
+    fd.append("file", file);
+    return api.post<BulkPoPreviewResponse>("/po/bulk/preview", fd).then((r) => r.data);
+};
+
+/** 미리보기에서 오류가 없을 때, 같은 파일을 확정 저장(batch insert, DRAFT 생성). */
+export const uploadPoBulk = (file: File) => {
+    const fd = new FormData();
+    fd.append("file", file);
+    return api.post<BulkPoResult>("/po/bulk/upload", fd).then((r) => r.data);
+};
+
+/** 대량 발주 엑셀 업로드 */
+
 export async function getReceiptSummary(poId: number) {
     const res = await fetch(`${baseUrl}/receipt/summary/${poId}`);
     if (!res.ok) throw new Error(await res.text());
@@ -221,6 +321,71 @@ export interface ItemSearchCondition {
     itemName?: string;
 }
 /** 아이템 조회조건 */
+
+/** 대량 품목 엑셀 업로드 (미리보기 → 확정) */
+export type BulkItemPreviewRow = {
+    rowNo: number;
+    itemCode: string | null;
+    itemName: string | null;
+    standardPrice: number | null;
+    valid: boolean;
+    error: string | null;
+};
+export type BulkItemPreviewResponse = {
+    totalRows: number;
+    validRows: number;
+    errorRows: number;
+    confirmable: boolean;
+    rows: BulkItemPreviewRow[];
+};
+export type BulkItemResult = {
+    totalRows: number;
+    successRows: number;
+    failRows: number;
+    errors: { row: number; message: string }[];
+};
+export const previewItemBulk = (file: File) => {
+    const fd = new FormData();
+    fd.append("file", file);
+    return api.post<BulkItemPreviewResponse>("/items/bulk/preview", fd).then((r) => r.data);
+};
+export const uploadItemBulk = (file: File) => {
+    const fd = new FormData();
+    fd.append("file", file);
+    return api.post<BulkItemResult>("/items/bulk/upload", fd).then((r) => r.data);
+};
+
+/** 대량 공급사 엑셀 업로드 (미리보기 → 확정) */
+export type BulkVendorPreviewRow = {
+    rowNo: number;
+    vendorCode: string | null;
+    vendorName: string | null;
+    valid: boolean;
+    error: string | null;
+};
+export type BulkVendorPreviewResponse = {
+    totalRows: number;
+    validRows: number;
+    errorRows: number;
+    confirmable: boolean;
+    rows: BulkVendorPreviewRow[];
+};
+export type BulkVendorResult = {
+    totalRows: number;
+    successRows: number;
+    failRows: number;
+    errors: { row: number; message: string }[];
+};
+export const previewVendorBulk = (file: File) => {
+    const fd = new FormData();
+    fd.append("file", file);
+    return api.post<BulkVendorPreviewResponse>("/vendors/bulk/preview", fd).then((r) => r.data);
+};
+export const uploadVendorBulk = (file: File) => {
+    const fd = new FormData();
+    fd.append("file", file);
+    return api.post<BulkVendorResult>("/vendors/bulk/upload", fd).then((r) => r.data);
+};
 
 /** 아이템 등록 */
 
@@ -242,6 +407,11 @@ export const updateItem = (id: Number, data: ItemCreateRequest) =>
 
 export const checkItemDuplicate = (itemCode: string) =>
     api.get<boolean>(`${baseUrl}/items/checkDuplicate`, { params: { itemCode } })
+        .then((r) => r.data);
+
+/** 아이템이름 중복체크 */
+export const checkItemNameDuplicate = (itemName: string) =>
+    api.get<boolean>(`${baseUrl}/items/checkDuplicateName`, { params: { itemName } })
         .then((r) => r.data);
 
 /** 아이템코드 중복체크 */
@@ -408,6 +578,11 @@ export const updateVendor = (vendorCode: string, data: VendorCreateRequest) =>
 /** 공급사코드 중복체크 */
 export const checkVendorDuplicate = (vendorCode: string) =>
     api.get<boolean>(`${baseUrl}/vendors/checkDuplicate`, { params: { vendorCode } })
+        .then((r) => r.data);
+
+/** 공급사명 중복체크 */
+export const checkVendorNameDuplicate = (vendorName: string) =>
+    api.get<boolean>(`${baseUrl}/vendors/checkDuplicateName`, { params: { vendorName } })
         .then((r) => r.data);
 
 /** 공급사 상세조회 */

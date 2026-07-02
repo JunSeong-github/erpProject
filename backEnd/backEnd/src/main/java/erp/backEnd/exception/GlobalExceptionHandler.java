@@ -256,6 +256,15 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
+    // 엑셀 대량 입고 업로드 파싱 실패: 사유 메시지를 본문(message)에 담아 400 반환
+    @ExceptionHandler
+    protected ResponseEntity<ErrorResponseDto> handleExcelParseException(ExcelParseException e) {
+        log.error("exception: " + e.getClass().getSimpleName());
+        log.error("message: " + e.getMessage());
+        final ErrorResponseDto response = ErrorResponseDto.of(INVALID_INPUT_VALUE, e);
+        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+    }
+
     // 비즈니스 요구사항에 따른 Exception
     @ExceptionHandler
     protected ResponseEntity<ErrorResponseDto> handleBusinessException(BusinessException e) {

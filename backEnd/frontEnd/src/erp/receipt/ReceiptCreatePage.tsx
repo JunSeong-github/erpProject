@@ -7,6 +7,7 @@ import { downloadReceiptExcel, printReceiptPdf, ReceiptExportData } from "./rece
 // 너 PoDetail 타입이 있으면 그걸 쓰고, 없으면 any로 시작해도 됨.
 type ReceiptLineUI = {
     poItemId: number;
+    itemCode: string;
     itemName: string;
     orderedQty: number;
     unitPrice: number;
@@ -122,6 +123,7 @@ export default function ReceiptCreatePage() {
 
             return {
                 poItemId,
+                itemCode: String(l.itemCode ?? ""),
                 itemName: String(l.itemName ?? ""),
                 etc: String(l.etc ?? ""),
                 poStatusLabel: String(l.poStatusLabel ?? ""),
@@ -235,7 +237,7 @@ export default function ReceiptCreatePage() {
             </div>
 
             <div style={{ marginBottom: 12 }}>
-                <div>PO ID: {poDetail.id}</div>
+                <div style={{ fontWeight: 700 }}>발주번호: {poDetail.id}</div>
                 <div>공급사: {poDetail.vendorName} ({poDetail.vendorCode})</div>
                 <div>납기요청일: {String(poDetail.deliveryDate ?? "")}</div>
                 <div>상태: {poDetail.poStatusLabel}</div>
@@ -259,6 +261,7 @@ export default function ReceiptCreatePage() {
                 <thead>
                 <tr>
                     <th style={{ border: "1px solid #ccc", padding: 6 }}>품목</th>
+                    <th style={{ border: "1px solid #ccc", padding: 6 }}>품목번호</th>
                     <th style={{ border: "1px solid #ccc", padding: 6 }}>발주당시가격</th>
                     <th style={{ border: "1px solid #ccc", padding: 6 }}>요청수량</th>
                     <th style={{ border: "1px solid #ccc", padding: 6 }}>합계가격</th>
@@ -274,6 +277,7 @@ export default function ReceiptCreatePage() {
                 {lines.map((l) => (
                     <tr key={l.poItemId}>
                         <td style={{ border: "1px solid #ccc", padding: 6 }}>{l.itemName}</td>
+                        <td style={{ border: "1px solid #ccc", padding: 6 }}>{l.itemCode}</td>
                         <td style={{ border: "1px solid #ccc", padding: 6 }}>{l.unitPrice}</td>
                         <td style={{ border: "1px solid #ccc", padding: 6 }}>{l.orderedQty}</td>
                         <td style={{ border: "1px solid #ccc", padding: 6 }}>{l.amount}</td>

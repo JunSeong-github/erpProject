@@ -99,9 +99,12 @@ export default function VendorListPage() {
                 </button>
             </div>
 
-            <div style={{ marginBottom: "10px" }}>
+            <div style={{ marginBottom: "10px", display: "flex", gap: "8px" }}>
                 <Link to="/erp/vendor/new">
                     <button type="button">새 공급사 추가</button>
+                </Link>
+                <Link to="/erp/vendor/bulk">
+                    <button type="button">대량 공급사 업로드</button>
                 </Link>
             </div>
 

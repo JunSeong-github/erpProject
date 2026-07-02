@@ -8,6 +8,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -27,6 +28,12 @@ public class ItemController {
     @GetMapping("/checkDuplicate")
     public ResponseEntity<Boolean> checkDuplicate(@RequestParam String itemCode) {
         boolean isDuplicate = itemService.existsByItemCode(itemCode);
+        return ResponseEntity.ok(isDuplicate);
+    }
+
+    @GetMapping("/checkDuplicateName")
+    public ResponseEntity<Boolean> checkDuplicateName(@RequestParam String itemName) {
+        boolean isDuplicate = itemService.existsByItemName(itemName);
         return ResponseEntity.ok(isDuplicate);
     }
 
@@ -67,6 +74,18 @@ public class ItemController {
     public ResponseEntity<Page<StockResponse>> stock(ItemSearchCondition itemSearchCondition, Pageable pageable) {
         Page<StockResponse> page = itemService.findStockPage(itemSearchCondition, pageable);
         return ResponseEntity.ok(page);
+    }
+
+    // [대량 품목 - 미리보기] 파싱+검증만, 저장 X
+    @PostMapping(value = "/bulk/preview", consumes = "multipart/form-data")
+    public ResponseEntity<BulkItemPreviewResponse> bulkPreview(@RequestParam("file") MultipartFile file) {
+        return ResponseEntity.ok(itemService.bulkPreview(file));
+    }
+
+    // [대량 품목 - 확정 저장] 오류 없으면 batch insert, 있으면 전체 롤백
+    @PostMapping(value = "/bulk/upload", consumes = "multipart/form-data")
+    public ResponseEntity<BulkItemResponse> bulkUpload(@RequestParam("file") MultipartFile file) {
+        return ResponseEntity.ok(itemService.bulkUpload(file));
     }
 
 }

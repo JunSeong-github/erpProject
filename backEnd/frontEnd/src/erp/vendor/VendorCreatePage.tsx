@@ -1,6 +1,6 @@
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { checkVendorDuplicate, createVendor, deleteVendor, getVendorDetail, updateVendor } from "../api";
+import { checkVendorDuplicate, checkVendorNameDuplicate, createVendor, deleteVendor, getVendorDetail, updateVendor } from "../api";
 import { useQuery } from "@tanstack/react-query";
 
 export default function VendorCreatePage() {
@@ -10,7 +10,10 @@ export default function VendorCreatePage() {
 
     const [vendorCode, setVendorCode] = useState("");
     const [vendorName, setVendorName] = useState("");
+    const [codeOk, setCodeOk] = useState(false);       // 공급사코드 중복확인 통과 여부(수정 시 코드 고정이라 true)
+    const [nameOk, setNameOk] = useState(false);       // 공급사명 중복확인 통과 여부
     const [isChecking, setIsChecking] = useState(false);
+    const [isCheckingName, setIsCheckingName] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
 
     const navigate = useNavigate();
@@ -44,6 +47,9 @@ export default function VendorCreatePage() {
 
         setVendorCode(vendorDetail.vendorCode);
         setVendorName(vendorDetail.vendorName);
+        // 수정 진입 시 코드는 고정, 기존 이름도 유효하므로 통과 상태로 시작
+        setCodeOk(true);
+        setNameOk(true);
     }, [vendorDetail]);
 
     const checkDuplicate = async () => {
@@ -56,17 +62,38 @@ export default function VendorCreatePage() {
 
         try {
             const exists = await checkVendorDuplicate(vendorCode);
-
-            if (exists) {
-                alert("이미 존재하는 공급사코드입니다.");
-            } else {
-                alert("사용 가능한 공급사코드입니다.");
-            }
+            setCodeOk(!exists);
+            alert(exists ? "이미 존재하는 공급사코드입니다." : "사용 가능한 공급사코드입니다.");
         } catch (error) {
             console.error(error);
             alert("중복 체크에 실패했습니다.");
         } finally {
             setIsChecking(false);
+        }
+    };
+
+    const checkNameDuplicate = async () => {
+        if (!vendorName.trim()) {
+            alert("공급사명을 입력해주세요.");
+            return;
+        }
+
+        if (vendorDetail && vendorDetail.vendorName === vendorName) {
+            setNameOk(true);
+            alert("사용 가능한 공급사명입니다.");
+            return;
+        }
+
+        setIsCheckingName(true);
+        try {
+            const exists = await checkVendorNameDuplicate(vendorName);
+            setNameOk(!exists);
+            alert(exists ? "이미 존재하는 공급사명입니다." : "사용 가능한 공급사명입니다.");
+        } catch (error) {
+            console.error(error);
+            alert("중복 체크에 실패했습니다.");
+        } finally {
+            setIsCheckingName(false);
         }
     };
 
@@ -78,6 +105,16 @@ export default function VendorCreatePage() {
 
         if (!vendorName) {
             alert("공급사명을 입력하세요.");
+            return;
+        }
+
+        if (!codeOk) {
+            alert("공급사코드 중복확인을 해주세요.");
+            return;
+        }
+
+        if (!nameOk) {
+            alert("공급사명 중복확인을 해주세요.");
             return;
         }
 
@@ -115,9 +152,9 @@ export default function VendorCreatePage() {
             await deleteVendor(String(code));
             alert("삭제되었습니다.");
             goBackToList();
-        } catch (e) {
+        } catch (e: any) {
             console.error(e);
-            alert("오류 발생");
+            alert(e?.response?.data?.message ?? e?.message ?? "오류 발생");
         }
     };
 
@@ -132,7 +169,10 @@ export default function VendorCreatePage() {
                     value={vendorCode}
                     readOnly={isEdit}
                     style={{ width: "120px" }}
-                    onChange={(e) => setVendorCode(e.target.value)}
+                    onChange={(e) => {
+                        setVendorCode(e.target.value);
+                        setCodeOk(false);
+                    }}
                 />
 
                 {!isEdit && (
@@ -151,9 +191,20 @@ export default function VendorCreatePage() {
                         type="text"
                         value={vendorName}
                         style={{ width: "150px" }}
-                        onChange={(e) => setVendorName(e.target.value)}
+                        onChange={(e) => {
+                            setVendorName(e.target.value);
+                            setNameOk(false);
+                        }}
                     />
                 </label>
+
+                <button
+                    type="button"
+                    onClick={checkNameDuplicate}
+                    disabled={isCheckingName}
+                >
+                    {isCheckingName ? "확인중..." : "중복확인"}
+                </button>
             </div>
 
             <div style={{ marginTop: "12px" }}>

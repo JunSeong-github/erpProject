@@ -46,6 +46,9 @@ dependencies {
 	implementation 'com.mysql:mysql-connector-j'
 	runtimeOnly 'org.postgresql:postgresql'
 
+	//Apache POI - 엑셀(.xlsx/.xls) 대량 입고 업로드 파싱
+	implementation 'org.apache.poi:poi-ooxml:5.2.5'
+
 	//swagger
 //	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.6'
 //	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.0-RC1'
