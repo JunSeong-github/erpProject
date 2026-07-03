@@ -52,9 +52,11 @@ public class PoController {
     }
 
     @PostMapping("/create")
-    public ResponseEntity<?> create(@RequestBody PoCreateRequest poCreateRequest) {
+    public ResponseEntity<PoResponse> create(@RequestBody PoCreateRequest poCreateRequest) {
         Po save = poService.save(poCreateRequest);
-        return ResponseEntity.ok(save);
+        // Po 엔티티를 그대로 반환하면 양방향 연관관계(Po↔Vendor↔Po↔PoItem…)가 무한재귀 직렬화되어
+        // HttpMessageNotWritableException 이 발생한다. PoResponse DTO 로 변환해 반환한다.
+        return ResponseEntity.ok(PoResponse.from(save));
     }
 
     @PostMapping("/{id}/approve")

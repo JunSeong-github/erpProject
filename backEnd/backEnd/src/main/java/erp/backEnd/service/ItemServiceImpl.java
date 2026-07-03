@@ -6,9 +6,12 @@ import erp.backEnd.entity.Po;
 import erp.backEnd.enumeration.PoStatus;
 import erp.backEnd.exception.BusinessException;
 import erp.backEnd.exception.ErrorCode;
+import erp.backEnd.config.CacheConfig;
 import erp.backEnd.repository.ItemBulkRepository;
 import erp.backEnd.repository.ItemRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -31,7 +34,12 @@ public class ItemServiceImpl implements ItemService {
     private final ItemRepository itemRepository;
     private final ItemExcelParser itemExcelParser;
     private final ItemBulkRepository itemBulkRepository;
+    private final StockQueryCacheService stockQueryCacheService;
 
+    // 품목 전체 목록: 조회가 잦고 변경은 드물어 캐싱 이득이 큼.
+    // 파라미터가 없으므로 단일 고정 키('all')로 저장. 등록/수정/삭제 시 evict 됨.
+    @Override
+    @Cacheable(cacheNames = CacheConfig.ITEMS_CACHE, key = "'all'")
     public List<ItemResponse> itemFindAll() {
         List<Item> itemDdlList = itemRepository.findAll();
         return ItemResponse.toListDto(itemDdlList);
@@ -49,6 +57,7 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     @Transactional
+    @CacheEvict(cacheNames = {CacheConfig.ITEMS_CACHE, CacheConfig.STOCK_CACHE}, allEntries = true)
     public Item save(ItemCreateRequest req) {
 
         if (itemRepository.existsByItemCode(req.getItemCode())) {
@@ -71,6 +80,7 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     @Transactional
+    @CacheEvict(cacheNames = {CacheConfig.ITEMS_CACHE, CacheConfig.STOCK_CACHE}, allEntries = true)
     public void update(Long id, ItemCreateRequest req) {
 
         Item item = itemRepository.findById(id)
@@ -106,12 +116,13 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     @Transactional
+    @CacheEvict(cacheNames = {CacheConfig.ITEMS_CACHE, CacheConfig.STOCK_CACHE}, allEntries = true)
     public void delete(Long id) {
         Item item = itemRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("저장된 품목을 찾을 수 없습니다."));
 
-        // 재고(입고합 - 승인사용합)가 남아있으면 삭제 불가
-        Long stock = itemRepository.getCurrentStock(id);
+        // 재고가 남아있으면 삭제 불가 (정답값인 stock_qty 컬럼 기준)
+        Long stock = item.getStockQty();
         if (stock != null && stock > 0) {
             throw new BusinessException(ErrorCode.ITEM_HAS_STOCK);
         }
@@ -119,13 +130,39 @@ public class ItemServiceImpl implements ItemService {
         itemRepository.deleteById(id);
     }
 
+    /**
+     * 재고 대사(reconciliation): 정답값 컬럼(stock_qty)과 원장 집계(입고합-승인사용합)를 비교한다.
+     * 두 값이 어긋나면 어딘가에서 컬럼 동기화가 누락된 것이므로 점검이 필요하다.
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public StockReconcileResponse reconcileStock(Long id) {
+        Item item = itemRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("저장된 품목을 찾을 수 없습니다."));
+
+        long columnStock = item.getStockQty() != null ? item.getStockQty() : 0L;
+        long aggregatedStock = itemRepository.getAggregatedStock(id);
+
+        return StockReconcileResponse.builder()
+                .itemId(id)
+                .itemCode(item.getItemCode())
+                .itemName(item.getItemName())
+                .columnStock(columnStock)
+                .aggregatedStock(aggregatedStock)
+                .matched(columnStock == aggregatedStock)
+                .diff(columnStock - aggregatedStock)
+                .build();
+    }
+
     public Page<ItemResponse> findSearchPageComplex(ItemSearchCondition itemSearchCondition, Pageable pageable){
         return itemRepository.searchPageComplex(itemSearchCondition, pageable);
     }
 
+    // 재고 현황 조회: 캐싱 전용 빈(StockQueryCacheService)에 위임해 결과를 캐시에서 받고,
+    // 직렬화 안전 래퍼(CachedPage)를 다시 Page 로 복원해 반환한다(응답 형태는 기존과 동일).
     @Override
     public Page<StockResponse> findStockPage(ItemSearchCondition itemSearchCondition, Pageable pageable){
-        return itemRepository.searchStockPage(itemSearchCondition, pageable);
+        return stockQueryCacheService.getStockPage(itemSearchCondition, pageable).toPage(pageable);
     }
 
     // ==================== 대량 품목 업로드(엑셀) ====================
@@ -157,6 +194,7 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     @Transactional
+    @CacheEvict(cacheNames = {CacheConfig.ITEMS_CACHE, CacheConfig.STOCK_CACHE}, allEntries = true)
     public BulkItemResponse bulkUpload(MultipartFile file) {
         List<ItemExcelParser.ParsedRow> parsed = itemExcelParser.parse(file).rows;
         List<ItemRowCheck> checks = validateItems(parsed);

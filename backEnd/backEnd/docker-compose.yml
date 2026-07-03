@@ -1,0 +1,23 @@
+# 로컬 개발용 Redis 컨테이너
+# 실행:   docker compose up -d
+# 종료:   docker compose down
+# 로그:   docker compose logs -f redis
+# 접속:   docker exec -it erp-redis redis-cli
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: erp-redis
+    ports:
+      - "6379:6379"          # 호스트 6379 → 컨테이너 6379
+    command: ["redis-server", "--appendonly", "yes"]  # AOF 영속화(재시작 후 데이터 유지)
+    volumes:
+      - erp-redis-data:/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+volumes:
+  erp-redis-data:

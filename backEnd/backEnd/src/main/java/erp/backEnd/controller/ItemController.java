@@ -76,6 +76,12 @@ public class ItemController {
         return ResponseEntity.ok(page);
     }
 
+    // 재고 대사(reconciliation): stock_qty 컬럼값 vs 원장 집계값 비교
+    @GetMapping("/{id}/stock/reconcile")
+    public ResponseEntity<StockReconcileResponse> reconcileStock(@PathVariable Long id) {
+        return ResponseEntity.ok(itemService.reconcileStock(id));
+    }
+
     // [대량 품목 - 미리보기] 파싱+검증만, 저장 X
     @PostMapping(value = "/bulk/preview", consumes = "multipart/form-data")
     public ResponseEntity<BulkItemPreviewResponse> bulkPreview(@RequestParam("file") MultipartFile file) {

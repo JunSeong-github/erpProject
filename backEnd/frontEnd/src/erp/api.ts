@@ -319,6 +319,7 @@ export async function getReceiptSummary(poId: number) {
 /** 아이템 조회조건 */
 export interface ItemSearchCondition {
     itemName?: string;
+    itemCode?: string;
 }
 /** 아이템 조회조건 */
 
@@ -444,6 +445,9 @@ export const listItem = (params: {
     if (params.condition?.itemName) {
         queryParams.itemName = params.condition.itemName;
     }
+    if (params.condition?.itemCode) {
+        queryParams.itemCode = params.condition.itemCode;
+    }
 
     return api.get<PageResp<Item>>('/items/list', { params: queryParams })
         .then((r) => r.data);
@@ -472,6 +476,7 @@ export const listStock = (params: {
     };
 
     if (params.condition?.itemName) queryParams.itemName = params.condition.itemName;
+    if (params.condition?.itemCode) queryParams.itemCode = params.condition.itemCode;
 
     return api.get<PageResp<Stock>>('/items/stock', { params: queryParams })
         .then((r) => r.data);

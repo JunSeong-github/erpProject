@@ -14,11 +14,14 @@ import erp.backEnd.entity.ReceiptLine;
 import erp.backEnd.enumeration.PoStatus;
 import erp.backEnd.exception.BusinessException;
 import erp.backEnd.exception.ErrorCode;
+import erp.backEnd.repository.ItemRepository;
 import erp.backEnd.repository.PoRepository;
 import erp.backEnd.repository.ReceiptBulkRepository;
 import erp.backEnd.repository.ReceiptLineRepository;
 import erp.backEnd.repository.ReceiptRepository;
+import erp.backEnd.config.CacheConfig;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -43,8 +46,10 @@ public class ReceiptServiceImpl implements ReceiptService {
     private final ReceiptLineRepository receiptLineRepository;
     private final ReceiptBulkRepository receiptBulkRepository;
     private final ReceiptExcelParser receiptExcelParser;
+    private final ItemRepository itemRepository;
 
     @Transactional
+    @CacheEvict(cacheNames = CacheConfig.STOCK_CACHE, allEntries = true)  // 입고로 재고 증가 → 재고 캐시 무효화
     public void createReceipt(Long poId, ReceiptCreateRequest req) {
 
         Optional<Po> optionalPo = poRepository.findDetail(poId);
@@ -67,6 +72,9 @@ public class ReceiptServiceImpl implements ReceiptService {
         if (lines == null || lines.isEmpty()) {
             throw new IllegalArgumentException("입고 라인이 비어있습니다.");
         }
+
+        // 이번 입고로 증가시킬 품목별 수량 누적(입고 저장 후 재고 컬럼에 반영)
+        Map<Long, Long> addByItemId = new LinkedHashMap<>();
 
         for (ReceiptLineCreateRequest lineReq : lines) {
 
@@ -96,9 +104,19 @@ public class ReceiptServiceImpl implements ReceiptService {
             receipt.addLine(
                     ReceiptLine.create(poItem, receivedQty, lineReq.getLineRemark())
             );
+
+            // 품목 PK 기준으로 입고수량 누적(item 은 프록시라도 getId() 는 추가 쿼리 없이 반환)
+            addByItemId.merge(poItem.getItem().getId(), receivedQty, Long::sum);
         }
 
         receiptRepository.save(receipt);
+
+        // 재고 컬럼 원자적 증가(입고분 반영). version 도 함께 증가.
+        addByItemId.forEach((itemId, qty) -> {
+            if (qty != null && qty > 0) {
+                itemRepository.increaseStock(itemId, qty);
+            }
+        });
 
         Map<Long, Long> receivedSumMap = receiptRepository.sumReceivedByPoItem(poId);
 
@@ -117,6 +135,7 @@ public class ReceiptServiceImpl implements ReceiptService {
     }
 
     @Transactional
+    @CacheEvict(cacheNames = CacheConfig.STOCK_CACHE, allEntries = true)  // 대량 입고 → 재고 캐시 무효화
     public BulkReceiptResponse bulkCreate(BulkReceiptRequest req) {
         List<BulkReceiptRow> rows = (req == null) ? null : req.getRows();
         if (rows == null || rows.isEmpty()) {
@@ -157,6 +176,7 @@ public class ReceiptServiceImpl implements ReceiptService {
     }
 
     @Transactional
+    @CacheEvict(cacheNames = CacheConfig.STOCK_CACHE, allEntries = true)  // 엑셀 대량 입고 → 재고 캐시 무효화
     public BulkReceiptResponse bulkUpload(MultipartFile file) {
         List<ReceiptExcelParser.ParsedRow> parsed = receiptExcelParser.parse(file).rows;
         return validateAndSave(parsed);
@@ -209,6 +229,30 @@ public class ReceiptServiceImpl implements ReceiptService {
             }
         }
         receiptBulkRepository.batchInsertLines(lineRows);
+
+        // 재고 컬럼 원자적 증가(입고분 반영).
+        // 대량 입고는 JDBC 우회 경로라 엔티티 dirty checking 이 안 타므로, 여기서 명시적으로 품목별 재고를 올린다.
+        // poItemId -> itemId 매핑을 로딩된 PO 에서 구성한 뒤, 품목별 입고수량을 합산한다.
+        Map<Long, Long> poItemToItemId = new HashMap<>();
+        for (Po po : vr.poMap.values()) {
+            for (PoItem pi : po.getPoItems()) {
+                poItemToItemId.put(pi.getPoItemId(), pi.getItem().getId());
+            }
+        }
+        Map<Long, Long> addByItemId = new LinkedHashMap<>();
+        for (ValidRow v : valids) {
+            Long itemId = poItemToItemId.get(v.poItemId);
+            if (itemId != null) {
+                addByItemId.merge(itemId, v.receivedQty, Long::sum);
+            }
+        }
+        List<ReceiptBulkRepository.ItemStockDelta> stockDeltas = new ArrayList<>(addByItemId.size());
+        addByItemId.forEach((itemId, qty) -> {
+            if (qty != null && qty > 0) {
+                stockDeltas.add(new ReceiptBulkRepository.ItemStockDelta(itemId, qty));
+            }
+        });
+        receiptBulkRepository.batchIncreaseItemStock(stockDeltas);
 
         // 영향받은 발주들의 상태를 일괄 재계산 (PO별 1회, 누적합 기준이라 중복 계산해도 결과 동일)
         Map<Long, Po> poMap = vr.poMap;

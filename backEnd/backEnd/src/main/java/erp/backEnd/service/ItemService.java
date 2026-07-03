@@ -29,6 +29,9 @@ public interface ItemService {
 
     Page<StockResponse> findStockPage(ItemSearchCondition condition, Pageable pageable);
 
+    /** 재고 대사: stock_qty 컬럼값과 원장 집계값을 비교해 불일치 여부를 반환한다. */
+    StockReconcileResponse reconcileStock(Long id);
+
     /** [대량 품목 - 미리보기] 엑셀을 파싱+검증만 하고 저장하지 않는다. */
     BulkItemPreviewResponse bulkPreview(MultipartFile file);
 

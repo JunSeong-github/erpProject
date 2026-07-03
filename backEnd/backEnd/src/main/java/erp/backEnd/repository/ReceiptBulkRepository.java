@@ -43,6 +43,11 @@ public class ReceiptBulkRepository {
             "INSERT INTO receipt_line (receipt_id, po_item_id, received_qty, line_remark, created_date, last_modified_date) " +
             "VALUES (?, ?, ?, ?, ?, ?)";
 
+    // 대량 입고분을 품목 재고 컬럼에 원자적으로 더한다(JDBC 경로라 엔티티를 우회하므로 여기서 직접 UPDATE).
+    // version 도 함께 증가시켜 낙관적 락 버전을 일관되게 유지한다.
+    private static final String UPDATE_ITEM_STOCK_ADD =
+            "UPDATE item SET stock_qty = stock_qty + ?, version = version + 1 WHERE item_id = ?";
+
     /**
      * 입고 헤더들을 배치 insert 하고, 생성된 receipt_id 를 입력 순서대로 반환한다.
      */
@@ -109,6 +114,44 @@ public class ReceiptBulkRepository {
                     return chunk.size();
                 }
             });
+        }
+    }
+
+    /**
+     * 품목별 재고 증가분을 배치 UPDATE 한다(대량 입고분 반영).
+     */
+    public void batchIncreaseItemStock(List<ItemStockDelta> deltas) {
+        if (deltas == null || deltas.isEmpty()) {
+            return;
+        }
+        for (int start = 0; start < deltas.size(); start += BATCH_SIZE) {
+            int end = Math.min(start + BATCH_SIZE, deltas.size());
+            final List<ItemStockDelta> chunk = deltas.subList(start, end);
+
+            jdbcTemplate.batchUpdate(UPDATE_ITEM_STOCK_ADD, new BatchPreparedStatementSetter() {
+                @Override
+                public void setValues(PreparedStatement ps, int i) throws SQLException {
+                    ItemStockDelta d = chunk.get(i);
+                    ps.setLong(1, d.qty);
+                    ps.setLong(2, d.itemId);
+                }
+
+                @Override
+                public int getBatchSize() {
+                    return chunk.size();
+                }
+            });
+        }
+    }
+
+    /** 품목 재고 증가분 값 홀더 */
+    public static class ItemStockDelta {
+        public final Long itemId;
+        public final Long qty;
+
+        public ItemStockDelta(Long itemId, Long qty) {
+            this.itemId = itemId;
+            this.qty = qty;
         }
     }
 

@@ -11,5 +11,9 @@ public interface ItemRepositoryCustom {
 
     Page<StockResponse> searchStockPage(ItemSearchCondition condition, Pageable pageable);
 
-    Long getCurrentStock(Long itemId);
+    /**
+     * 집계(입고합 - 승인사용합)로 재고를 재계산한다.
+     * 정상 조회는 item.stock_qty 컬럼을 정답으로 쓰고, 이 메서드는 컬럼값 검증/대사(reconciliation) 용도로만 사용한다.
+     */
+    Long getAggregatedStock(Long itemId);
 }

@@ -5,4 +5,5 @@ import lombok.Data;
 @Data
 public class ItemSearchCondition {
     private String itemName;
+    private String itemCode;
 }

@@ -94,6 +94,11 @@ public class PoServiceImpl implements PoService{
        // 4) 라인 일괄 저장
        poItemRepository.saveAll(poItems);
 
+       // 양방향 연관관계 in-memory 일관성 유지(mappedBy 역방향이라 추가 insert 없음).
+       // 이 반영이 없으면 같은 요청 세션에서 savedPo.getPoItems() 가 빈 컬렉션으로 캐시되어
+       // 생성 응답에 라인이 비어 보인다.
+       savedPo.getPoItems().addAll(poItems);
+
        return savedPo;
 
    }

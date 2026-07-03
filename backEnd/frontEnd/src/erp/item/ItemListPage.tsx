@@ -9,17 +9,20 @@ export default function ItemListPage(){
 
     const initialPage = Math.max(Number(searchParams.get("page") ?? "0"), 0);
     const initialItemName = searchParams.get("itemName") || "";
+    const initialItemCode = searchParams.get("itemCode") || "";
 
     const [page, setPage] = useState(initialPage);
     const pageSize = 10;
 
 
     const [searchCondition, setSearchCondition] = useState<ItemSearchCondition>({
-        itemName: initialItemName
+        itemName: initialItemName,
+        itemCode: initialItemCode
     })
 
     const [appliedCondition, setAppliedCondition] = useState<ItemSearchCondition>({
-        itemName: initialItemName
+        itemName: initialItemName,
+        itemCode: initialItemCode
     })
 
     const updateUrlParams = (newPage: number, condition: ItemSearchCondition) => {
@@ -28,6 +31,7 @@ export default function ItemListPage(){
         };
 
         if (condition.itemName) params.itemName = condition.itemName;
+        if (condition.itemCode) params.itemCode = condition.itemCode;
 
         setSearchParams(params);
     };
@@ -64,6 +68,20 @@ export default function ItemListPage(){
 
             <div style={{marginBottom:"10px"}}>
                 <label>
+                    &nbsp;품목코드:&nbsp;
+                    <input
+                        type="text"
+                        style={{width:"150px"}}
+                        value={searchCondition.itemCode || ""}
+                        onChange={(e)=> setSearchCondition({
+                            ...searchCondition,
+                            itemCode:e.target.value
+                        })}
+                        onKeyDown={(e)=> { if (e.key === "Enter") handleSearch(); }}
+                    />
+                </label>
+
+                <label>
                     &nbsp;품목명:&nbsp;
                     <input
                         type="text"
@@ -73,6 +91,7 @@ export default function ItemListPage(){
                             ...searchCondition,
                             itemName:e.target.value
                         })}
+                        onKeyDown={(e)=> { if (e.key === "Enter") handleSearch(); }}
                     />
                 </label>
 

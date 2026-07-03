@@ -9,8 +9,10 @@ import erp.backEnd.exception.BusinessException;
 import erp.backEnd.exception.ErrorCode;
 import erp.backEnd.repository.ItemRepository;
 import erp.backEnd.repository.StockUsageRepository;
+import erp.backEnd.config.CacheConfig;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -61,19 +63,24 @@ public class StockUsageServiceImpl implements StockUsageService {
 
     @Override
     @Transactional
+    @CacheEvict(cacheNames = CacheConfig.STOCK_CACHE, allEntries = true)  // 사용 승인으로 재고 차감 → 재고 캐시 무효화
     public void approve(Long id) {
         StockUsage usage = stockUsageRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("재고 사용 내역 없음: " + id));
 
-        // 승인 시 실재고 차감 → 현재 가용재고보다 많이 사용할 수 없음
-        Long currentStock = itemRepository.getCurrentStock(usage.getItem().getId());
-        if (usage.getUsageQty() > currentStock) {
-            log.warn("재고 부족 승인 차단 - itemId={}, 현재고={}, 사용요청={}",
-                    usage.getItem().getId(), currentStock, usage.getUsageQty());
+        // 요청 상태만 승인 가능(메모리 상태 전이). 여기서 검증에 실패하면 재고를 건드리지 않는다.
+        usage.approve();
+
+        // 승인 시 실재고를 원자적으로 차감한다.
+        // UPDATE ... WHERE stock_qty >= qty 로 "읽고-검사-차감"이 DB 단일 문장에서 원자적으로 처리되므로,
+        // 동일 품목을 동시에 승인해도 재고가 음수가 되는 check-then-act 경합이 발생하지 않는다.
+        int updated = itemRepository.decreaseStock(usage.getItem().getId(), usage.getUsageQty());
+        if (updated == 0) {
+            log.warn("재고 부족 승인 차단 - itemId={}, 사용요청={}",
+                    usage.getItem().getId(), usage.getUsageQty());
+            // 예외 → 트랜잭션 롤백 → 위 usage.approve() 상태전이도 함께 취소됨
             throw new BusinessException(ErrorCode.STOCK_NOT_ENOUGH);
         }
-
-        usage.approve();
     }
 
     @Override

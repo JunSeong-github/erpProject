@@ -24,9 +24,10 @@ public class ItemBulkRepository {
 
     private static final int BATCH_SIZE = 1000;
 
+    // 신규 품목의 초기 재고(stock_qty)와 낙관적 락 버전(version)은 0 으로 시작한다.
     private static final String INSERT_ITEM =
-            "INSERT INTO item (item_code, item_name, standard_price, created_date, last_modified_date) " +
-            "VALUES (?, ?, ?, ?, ?)";
+            "INSERT INTO item (item_code, item_name, standard_price, stock_qty, version, created_date, last_modified_date) " +
+            "VALUES (?, ?, ?, 0, 0, ?, ?)";
 
     public void batchInsert(List<ItemRow> items) {
         for (int start = 0; start < items.size(); start += BATCH_SIZE) {
