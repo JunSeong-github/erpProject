@@ -1,8 +1,20 @@
 import { api } from "../lib/axios";
+import type { AxiosError } from "axios";
 
 // const baseUrl = import.meta.env.VITE_API_BASE ?? "https://erpproject-pu8e.onrender.com";
 const baseUrl = import.meta.env.VITE_API_BASE ?? "http://localhost:8080";
 // const baseUrl = "https://erpproject-pu8e.onrender.com";
+
+/** axios 에러에서 백엔드 메시지({code,message} 등)를 추출해 사용자용 Error 로 변환 */
+function apiErr(e: unknown, fallback: string): Error {
+    const ax = e as AxiosError<any>;
+    const data = ax?.response?.data as any;
+    const msg =
+        (typeof data === "string" ? data : data?.message || data?.msg || data?.error) ||
+        ax?.message ||
+        fallback;
+    return new Error(msg);
+}
 
 /** 인증 */
 export type AuthUser = {
@@ -118,32 +130,64 @@ export async function listPo(params: { page: number; size: number; condition?: P
 
 /** 발주 목록 조회 */
 
+/** 발주 신규 등록 / 수정 payload (백엔드 PoCreateRequest 매핑) */
+export type PoWriteRequest = {
+    vendorCode: string;
+    deliveryDate: string;
+    etc?: string;
+    poStatus?: string;
+    lines: {
+        itemId: number | string;
+        quantity: number | string;
+        unitPrice: number | string;
+        amount: number | string;
+    }[];
+};
+
+/** 발주 신규 등록 */
+export async function createPo(payload: PoWriteRequest) {
+    try {
+        return (await api.post("/po/create", payload)).data;
+    } catch (e) {
+        throw apiErr(e, "발주 등록 실패");
+    }
+}
+
+/** 발주 수정 */
+export async function updatePo(id: number | string, payload: PoWriteRequest) {
+    try {
+        return (await api.put(`/po/${id}`, payload)).data;
+    } catch (e) {
+        throw apiErr(e, "발주 수정 실패");
+    }
+}
+
+/** 발주 삭제 */
+export async function deletePo(id: number | string) {
+    try {
+        return (await api.delete(`/po/${id}`)).data;
+    } catch (e) {
+        throw apiErr(e, "발주 삭제 실패");
+    }
+}
+
 /** 발주 승인 */
 export async function approvePo(id: number) {
-    const res = await fetch(`${baseUrl}/po/${id}/approve`, {
-        method: "POST",
-        credentials: "include",
-    });
-
-    if (!res.ok) {
-        const text = await res.text();
-        throw new Error(text || "승인 실패");
+    try {
+        await api.post(`/po/${id}/approve`);
+    } catch (e) {
+        throw apiErr(e, "승인 실패");
     }
 }
 /** 발주 승인 */
 
 /** 발주 반려 */
 
-export async function rejectPo(poId: number, reason: string){
-    const res = await fetch(`${baseUrl}/po/${poId}/reject`, {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ reason: reason }),
-    });
-    if (!res.ok) {
-        const text = await res.text();
-        throw new Error(text || "반려 실패");
+export async function rejectPo(poId: number, reason: string) {
+    try {
+        await api.post(`/po/${poId}/reject`, { reason });
+    } catch (e) {
+        throw apiErr(e, "반려 실패");
     }
 }
 
@@ -159,8 +203,11 @@ export async function getDetail(id: number) {
 
 /** 입고진행 */
 export async function startReceiving(poId: number) {
-    const res = await fetch(`${baseUrl}/po/startReceiving/${poId}`, { method: "POST" });
-    if (!res.ok) throw new Error(await res.text());
+    try {
+        await api.post(`/po/startReceiving/${poId}`);
+    } catch (e) {
+        throw apiErr(e, "입고진행 실패");
+    }
 }
 /** 입고진행 */
 
@@ -178,26 +225,14 @@ export type ReceiptCreateRequest = {
 };
 
 export async function createReceipt(poId: number, req: ReceiptCreateRequest) {
-    const res = await fetch(`${baseUrl}/receipt/create/${poId}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(req),
-    });
-    // if (!res.ok) throw new Error(await res.text());
-    if (!res.ok) {
-
-        const headerDetail = res.headers.get("X-Error-Detail");
-        if (headerDetail) throw new Error(headerDetail);
-
-        const ct = res.headers.get("content-type") || "";
-        if (ct.includes("application/json")) {
-            const body = await res.json().catch(() => null);
-            const msg = body?.message || body?.msg || body?.error || JSON.stringify(body);
-            throw new Error(msg || `HTTP ${res.status}`);
-        }
-
-        const text = await res.text().catch(() => "");
-        throw new Error(text || `HTTP ${res.status}`);
+    try {
+        await api.post(`/receipt/create/${poId}`, req);
+    } catch (e) {
+        const ax = e as AxiosError<any>;
+        // 백엔드가 상세 사유를 헤더로 줄 수 있음(대소문자 무관 → axios는 소문자 키)
+        const headerDetail = ax.response?.headers?.["x-error-detail"];
+        if (headerDetail) throw new Error(String(headerDetail));
+        throw apiErr(e, `HTTP ${ax.response?.status ?? ""}`);
     }
 }
 /** 입고등록 */

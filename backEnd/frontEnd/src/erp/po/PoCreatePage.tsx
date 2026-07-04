@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient} from "@tanstack/react-query";
 // import axios from "axios";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 
-import { listItems, listVendors, Item, Vendor, getDetail, approvePo, rejectPo, startReceiving } from "../api";
+import { listItems, listVendors, Item, Vendor, getDetail, approvePo, rejectPo, startReceiving, createPo, updatePo, deletePo } from "../api";
 import {useEffect, useState} from "react";
 import { useAuth } from "../../app/AuthContext";
 
@@ -29,8 +29,7 @@ export default function PoCreatePage() {
         staleTime: 1000 * 60, // 1분 캐싱 (옵션)
     });
 
-    // const baseUrl = import.meta.env.VITE_API_BASE ?? "https://erpproject-pu8e.onrender.com";
-    const baseUrl = import.meta.env.VITE_API_BASE ?? "http://localhost:8080";
+    // 발주 생성/수정/삭제는 api.ts 의 createPo/updatePo/deletePo(axios) 사용
 
     const { id } = useParams();
     const isEdit = Boolean(id);
@@ -202,19 +201,13 @@ export default function PoCreatePage() {
         try {
             setIsSaving(true);
 
-            const url = isEdit
-                ? `${baseUrl}/po/${id}`       // 수정
-                : `${baseUrl}/po/create`;     // 신규등록
+            // axios api 인스턴스(withCredentials) 사용 → 세션 쿠키 전송으로 createdBy=신청자 저장
+            if (isEdit) {
+                await updatePo(id!, payload);
+            } else {
+                await createPo(payload);
+            }
 
-            const method = isEdit ? "PUT" : "POST";
-
-            const res = await fetch(url, {
-                method,
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(payload),
-            });
-
-            if (!res.ok) throw new Error(await res.text());
             alert(isEdit ? "수정되었습니다." : "저장되었습니다.");
             if(!isEdit) goList();
 
@@ -234,9 +227,7 @@ export default function PoCreatePage() {
 
         try {
 
-            const res = await fetch(`${baseUrl}/po/${id}`, { method: "DELETE" });
-
-            if (!res.ok) throw new Error(await res.text());
+            await deletePo(id!);
 
             alert("삭제되었습니다.");
             // 삭제 후 목록으로 이동 (원하는 경로로)

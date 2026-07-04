@@ -64,6 +64,8 @@ public class SecurityConfig {
                                 "/stock-usage/*/approve",
                                 "/stock-usage/*/reject"
                         ).hasRole("ADMIN")
+                        // SSE 구독/알림 API 는 로그인한 사용자만(누구에게 보낼지 principal 필요)
+                        .requestMatchers("/notifications/**").authenticated()
                         .anyRequest().permitAll())
                 .exceptionHandling(e -> e
                         .accessDeniedHandler((req, res, ex) -> writeForbidden(res))

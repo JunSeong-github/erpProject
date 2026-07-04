@@ -1,6 +1,7 @@
 // src/components/AppHeader.tsx
 import { NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "../app/AuthContext";
+import NotificationBell from "../notifications/NotificationBell";
 
 export default function AppHeader() {
     const { user, logout } = useAuth();
@@ -83,6 +84,9 @@ export default function AppHeader() {
 
             {user && (
                 <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 12 }}>
+                    {/* 🔔 실시간 알림 벨 */}
+                    <NotificationBell />
+
                     <span style={{ fontSize: 13, color: "#475569" }}>
                         <b style={{ color: "#0f172a" }}>{user.username}</b>
                         <span

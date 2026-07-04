@@ -5,14 +5,18 @@ import erp.backEnd.dto.po.StockUsageResponse;
 import erp.backEnd.dto.po.StockUsageSearchCondition;
 import erp.backEnd.entity.Item;
 import erp.backEnd.entity.StockUsage;
+import erp.backEnd.enumeration.NotificationType;
+import erp.backEnd.event.NotificationEvent;
 import erp.backEnd.exception.BusinessException;
 import erp.backEnd.exception.ErrorCode;
 import erp.backEnd.repository.ItemRepository;
+import erp.backEnd.repository.MemberRepository;
 import erp.backEnd.repository.StockUsageRepository;
 import erp.backEnd.config.CacheConfig;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -25,6 +29,17 @@ public class StockUsageServiceImpl implements StockUsageService {
 
     private final StockUsageRepository stockUsageRepository;
     private final ItemRepository itemRepository;
+
+    private final MemberRepository memberRepository;
+    private final ApplicationEventPublisher eventPublisher;
+
+    /** 신청자 표기: "이름(로그인아이디)". 회원 조회 실패 시 아이디만, null 이면 "알 수 없음". */
+    private String requesterLabel(String loginId) {
+        if (loginId == null) return "알 수 없음";
+        return memberRepository.findByLoginId(loginId)
+                .map(m -> m.getUsername() + "(" + loginId + ")")
+                .orElse(loginId);
+    }
 
     @Override
     @Transactional
@@ -45,7 +60,19 @@ public class StockUsageServiceImpl implements StockUsageService {
                 req.getRemark()
         );
 
-        return stockUsageRepository.save(usage);
+        StockUsage saved = stockUsageRepository.save(usage);
+
+        // [알림 F] 재고사용 신청 접수 → 관리자 전원(신청자 본인 제외)
+        String requester = saved.getCreatedBy();
+        eventPublisher.publishEvent(NotificationEvent.toAdmins(
+                requester, NotificationType.STOCK_USAGE_REQUESTED,
+                "새 재고사용 승인 요청",
+                String.format("%s님이 재고사용(#%d, 품목 %s, 수량 %d)을 신청했습니다.",
+                        requesterLabel(requester),
+                        saved.getId(), item.getItemName(), saved.getUsageQty()),
+                "STOCK_USAGE", saved.getId()));
+
+        return saved;
     }
 
     @Override
@@ -81,6 +108,14 @@ public class StockUsageServiceImpl implements StockUsageService {
             // 예외 → 트랜잭션 롤백 → 위 usage.approve() 상태전이도 함께 취소됨
             throw new BusinessException(ErrorCode.STOCK_NOT_ENOUGH);
         }
+
+        // [알림 G] 재고사용 승인 → 신청자(작성자)
+        eventPublisher.publishEvent(NotificationEvent.toUser(
+                usage.getCreatedBy(), NotificationType.STOCK_USAGE_APPROVED,
+                "재고사용 승인됨",
+                String.format("재고사용 #%d(품목 %s)이(가) 승인되었습니다.",
+                        usage.getId(), usage.getItem().getItemName()),
+                "STOCK_USAGE", usage.getId()));
     }
 
     @Override
@@ -90,5 +125,12 @@ public class StockUsageServiceImpl implements StockUsageService {
                 .orElseThrow(() -> new IllegalArgumentException("재고 사용 내역 없음: " + id));
 
         usage.reject(reason);
+
+        // [알림 H] 재고사용 반려 → 신청자(작성자)
+        eventPublisher.publishEvent(NotificationEvent.toUser(
+                usage.getCreatedBy(), NotificationType.STOCK_USAGE_REJECTED,
+                "재고사용 반려됨",
+                String.format("재고사용 #%d이(가) 반려되었습니다. 사유: %s", usage.getId(), reason),
+                "STOCK_USAGE", usage.getId()));
     }
 }

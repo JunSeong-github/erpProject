@@ -7,16 +7,20 @@ import erp.backEnd.dto.po.PoCreateRequest;
 import erp.backEnd.dto.po.PoResponse;
 import erp.backEnd.dto.po.PoSearchCondition;
 import erp.backEnd.entity.*;
+import erp.backEnd.enumeration.NotificationType;
 import erp.backEnd.enumeration.PoStatus;
+import erp.backEnd.event.NotificationEvent;
 import erp.backEnd.exception.BusinessException;
 import erp.backEnd.exception.ErrorCode;
 import erp.backEnd.repository.ItemRepository;
+import erp.backEnd.repository.MemberRepository;
 import erp.backEnd.repository.PoBulkRepository;
 import erp.backEnd.repository.PoItemRepository;
 import erp.backEnd.repository.PoRepository;
 import erp.backEnd.repository.VendorRepository;
 import erp.backEnd.service.PoExcelParser;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -44,6 +48,17 @@ public class PoServiceImpl implements PoService{
 
    private final PoExcelParser poExcelParser;
    private final PoBulkRepository poBulkRepository;
+
+   private final MemberRepository memberRepository;
+   private final ApplicationEventPublisher eventPublisher;
+
+   /** 신청자 표기: "이름(로그인아이디)". 회원 조회 실패 시 아이디만, null 이면 "알 수 없음". */
+   private String requesterLabel(String loginId) {
+       if (loginId == null) return "알 수 없음";
+       return memberRepository.findByLoginId(loginId)
+               .map(m -> m.getUsername() + "(" + loginId + ")")
+               .orElse(loginId);
+   }
 
    public List<PoResponse> findPoList(){
        return poRepository.search();
@@ -99,6 +114,16 @@ public class PoServiceImpl implements PoService{
        // 생성 응답에 라인이 비어 보인다.
        savedPo.getPoItems().addAll(poItems);
 
+       // [알림 A] 발주 신청 접수 → 관리자 전원(신청자 본인 제외)
+       String requester = savedPo.getCreatedBy(); // AuditorAware 로 채워진 신청자 loginId
+       eventPublisher.publishEvent(NotificationEvent.toAdmins(
+               requester, NotificationType.PO_REQUESTED,
+               "새 발주 승인 요청",
+               String.format("%s님이 발주(#%d, 공급사 %s)를 신청했습니다.",
+                       requesterLabel(requester),
+                       savedPo.getId(), vendor.getVendorName()),
+               "PO", savedPo.getId()));
+
        return savedPo;
 
    }
@@ -115,6 +140,12 @@ public class PoServiceImpl implements PoService{
 
         po.approve();
 
+        // [알림 B] 발주 승인 → 신청자(작성자)
+        eventPublisher.publishEvent(NotificationEvent.toUser(
+                po.getCreatedBy(), NotificationType.PO_APPROVED,
+                "발주 승인됨",
+                String.format("발주 #%d이(가) 승인되었습니다.", po.getId()),
+                "PO", po.getId()));
     }
     @Override
     @Transactional(readOnly = true)
@@ -193,6 +224,13 @@ public class PoServiceImpl implements PoService{
                 .orElseThrow(() -> new IllegalArgumentException("PO 없음: " + id));
 
         po.reject(reason);
+
+        // [알림 C] 발주 반려 → 신청자(작성자)
+        eventPublisher.publishEvent(NotificationEvent.toUser(
+                po.getCreatedBy(), NotificationType.PO_REJECTED,
+                "발주 반려됨",
+                String.format("발주 #%d이(가) 반려되었습니다. 사유: %s", po.getId(), reason),
+                "PO", po.getId()));
     }
 
     @Override
