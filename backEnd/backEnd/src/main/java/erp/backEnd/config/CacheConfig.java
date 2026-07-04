@@ -33,7 +33,9 @@ import java.time.Duration;
  */
 @Configuration
 @EnableCaching
-@Profile("!prod")   // prod 제외(=local/default/기타)에서만 캐싱 활성화. prod 에서는 이 설정이 빠져 @EnableCaching 자체가 없다.
+// prod(운영, Redis 없음)와 test(CI, 외부 Redis 없음) 를 제외한 환경(local/default)에서만 캐싱 활성화.
+// 이 두 프로필에서는 이 설정이 빠져 @EnableCaching 자체가 없으므로 RedisCacheManager 를 요구하지 않는다.
+@Profile("!prod & !test")
 public class CacheConfig {
 
     /**
