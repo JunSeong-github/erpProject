@@ -7,3 +7,8 @@ spy.log
 !.env.example
 application-local.yml
 application-secret.yml
+
+# 개인/테스트 파일 (저장소에 올리지 않음)
+대량업로드_테스트파일/
+면접_예상질문_메모장.txt
+면접대비.md
