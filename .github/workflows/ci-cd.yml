@@ -67,4 +67,26 @@ jobs:
           path: backEnd/backEnd/build/reports/tests/test
           if-no-files-found: ignore
 
-  # ─────────────────── CD(Render 배포 + 프론트 gh-pages)는 다음 단계에서 추가 예정 ───────────────────
+  # ───────────────────────────── CD: Render 자동 배포 ─────────────────────────────
+  deploy:
+    name: Render 배포
+    # build-test(테스트·빌드)가 성공해야만 실행 → 실패 시 배포는 건너뜀(순서 보장)
+    needs: build-test
+    # main 브랜치 push 에서만 배포(PR/다른 브랜치는 배포하지 않음)
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      # Render Deploy Hook URL(민감정보)을 호출해 배포를 트리거한다.
+      # URL 은 GitHub Secrets(RENDER_DEPLOY_HOOK_URL)로만 참조하고 로그에 노출하지 않는다.
+      - name: Trigger Render deploy
+        env:
+          RENDER_DEPLOY_HOOK_URL: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
+        run: |
+          # Secret 미등록 방지 가드
+          if [ -z "$RENDER_DEPLOY_HOOK_URL" ]; then
+            echo "::error::RENDER_DEPLOY_HOOK_URL Secret 이 없습니다. 저장소 Settings > Secrets and variables > Actions 에 등록하세요."
+            exit 1
+          fi
+          # -f: HTTP 4xx/5xx 면 실패 처리, -s: 조용히, -S: 에러는 표시
+          curl -fsS -X POST "$RENDER_DEPLOY_HOOK_URL"
+          echo "Render 배포를 트리거했습니다. (진행 상황은 Render 대시보드에서 확인)"
