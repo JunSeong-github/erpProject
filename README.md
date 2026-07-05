@@ -9,6 +9,7 @@
 ![발주 목록](docs/po-list.png)
 ![입고 등록](docs/receipt.png)
 ![재고 현황](docs/stock.png)
+![재고 사용](docs/stock-usage.png)
 ![실시간 알림 — 헤더 알림 벨과 미읽음 뱃지 / 알림 목록 드롭다운](docs/notification.png)
 
 ## 기술 스택
