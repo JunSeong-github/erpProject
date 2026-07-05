@@ -6,6 +6,8 @@ import erp.backEnd.entity.Member;
 import erp.backEnd.exception.BusinessException;
 import erp.backEnd.exception.ErrorCode;
 import erp.backEnd.repository.MemberRepository;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
@@ -22,6 +24,7 @@ import org.springframework.security.web.context.HttpSessionSecurityContextReposi
 import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.web.bind.annotation.*;
 
+@Tag(name = "인증(Auth)", description = "세션 기반 로그인·로그아웃 및 현재 로그인 사용자 조회 API")
 @RestController("authController")
 @RequestMapping("/auth")
 @RequiredArgsConstructor
@@ -33,6 +36,7 @@ public class AuthController {
     private final SecurityContextRepository securityContextRepository =
             new HttpSessionSecurityContextRepository();
 
+    @Operation(summary = "로그인", description = "아이디/비밀번호로 인증하고 세션(JSESSIONID)을 발급한다. 이후 요청은 세션 쿠키로 인증이 유지된다.")
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest req,
                                                HttpServletRequest request,
@@ -57,6 +61,7 @@ public class AuthController {
         return ResponseEntity.ok(LoginResponse.from(member));
     }
 
+    @Operation(summary = "현재 로그인 사용자 조회", description = "세션의 인증 정보로 현재 로그인한 사용자를 반환한다. 미인증 시 401.")
     @GetMapping("/me")
     public ResponseEntity<LoginResponse> me() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -73,6 +78,7 @@ public class AuthController {
         return ResponseEntity.ok(LoginResponse.from(member));
     }
 
+    @Operation(summary = "로그아웃", description = "현재 세션을 무효화하고 SecurityContext 를 비운다.")
     @PostMapping("/logout")
     public ResponseEntity<Void> logout(HttpServletRequest request) {
         HttpSession session = request.getSession(false);

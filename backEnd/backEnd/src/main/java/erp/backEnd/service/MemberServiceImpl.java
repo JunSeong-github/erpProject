@@ -18,8 +18,8 @@ public class MemberServiceImpl implements MemberService {
     private final MemberRepository memberRepository;
 
     public FindMemberResponseDto findMember(Long memberId) {
-        //리포지토리에서 Optional로 멤버 꺼냄
-        Optional<Member> optionalMember = memberRepository.findByUsername(memberId);
+        //리포지토리에서 Optional로 멤버 꺼냄 (PK id 로 조회)
+        Optional<Member> optionalMember = memberRepository.findById(memberId);
 
         //멤버 없으면 에러 처리
         Member member = optionalMember.orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));

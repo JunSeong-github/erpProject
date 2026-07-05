@@ -24,6 +24,7 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.servlet.NoHandlerFoundException;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 import tools.jackson.databind.exc.MismatchedInputException;
 
 import java.nio.file.AccessDeniedException;
@@ -87,6 +88,21 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         log.error("exception: " + e.getClass().getSimpleName());
         log.error("message: " + e.getMessage());
         final ErrorResponseDto response = ErrorResponseDto.of(NOT_FOUND, e.getRequestURL(), "존재하지 않는 URL입니다.");
+        return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+    }
+
+    /**
+     * 매핑되지 않은 정적 리소스 요청(예: prod 에서 비활성화된 /v3/api-docs, /swagger-ui/**).
+     * base 클래스(ResponseEntityExceptionHandler)가 이미 이 예외를 다루므로 별도 @ExceptionHandler 를
+     * 추가하면 'Ambiguous' 로 기동 실패한다. → 반드시 base 메서드를 override 해야 한다.
+     * 기본 구현은 handleExceptionInternal(여기서 500 강제)을 타므로, 직접 404 를 반환한다.
+     */
+    @Override
+    protected ResponseEntity<Object> handleNoResourceFoundException(
+            NoResourceFoundException e, HttpHeaders headers, HttpStatusCode status, WebRequest request) {
+        log.error("exception: " + e.getClass().getSimpleName());
+        log.error("message: " + e.getMessage());
+        final ErrorResponseDto response = ErrorResponseDto.of(NOT_FOUND, e.getResourcePath(), "존재하지 않는 리소스입니다.");
         return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
     }
 

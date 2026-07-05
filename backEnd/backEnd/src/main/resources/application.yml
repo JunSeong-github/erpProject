@@ -24,6 +24,19 @@ spring:
       max-file-size: 10MB
       max-request-size: 10MB
 
+  # springdoc-openapi(Swagger) 설정 (기본값과 동일하게 명시)
+  # Swagger UI:  http://localhost:8080/swagger-ui.html
+  # OpenAPI JSON: http://localhost:8080/v3/api-docs
+  # ※ 여기(공통)는 enabled 기본값(true)이라 local 에서 활성화된다.
+  #    운영 노출 방지를 위해 아래 prod 프로필에서 api-docs/swagger-ui 를 모두 끈다.
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    # 태그(그룹)/API 는 스펙에 정의된 순서 그대로 표시(알파벳 정렬 안 함). "Try it out" 응답 소요시간 표시.
+    display-request-duration: true
+  api-docs:
+    path: /v3/api-docs
+
 logging:
   level:
     org.hibernate.SQL: debug
@@ -80,6 +93,15 @@ spring:
     url: ${DB_URL}
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
+
+# 운영에서는 API 명세가 외부에 노출되지 않도록 Swagger UI 와 /v3/api-docs 를 모두 비활성화한다.
+# enabled=false 면 해당 엔드포인트가 등록되지 않아 접근 시 404 가 된다.
+# (추가 방어: OpenApiConfig 는 @Profile("!prod") 라 prod 에서는 스펙 빈 자체가 만들어지지 않는다.)
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false
 
 # cross-site(프론트 github.io ↔ 백엔드 onrender.com) 세션 쿠키 전송을 위해 None/Secure 필요
 server:
