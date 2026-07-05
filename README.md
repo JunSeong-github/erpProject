@@ -7,16 +7,19 @@
 
 ![로그인 화면](docs/login.png)
 ![발주 목록](docs/po-list.png)
+![입고 등록](docs/receipt.png)
 ![재고 현황](docs/stock.png)
 ![실시간 알림 — 헤더 알림 벨과 미읽음 뱃지 / 알림 목록 드롭다운](docs/notification.png)
 
 ## 기술 스택
 
-**Backend** &nbsp; Java 17 · Spring Boot 4 · Spring Data JPA · QueryDSL · Spring Security(세션) · Redis(Spring Cache) · Apache POI · springdoc-openapi · p6spy
-**Database** &nbsp; MySQL(로컬) / PostgreSQL(운영)
-**Test** &nbsp; JUnit 5 · Mockito · H2
-**Frontend** &nbsp; React 19 · TypeScript · Vite · React Router · TanStack Query · Axios
-**CI/CD** &nbsp; GitHub Actions · Render(백엔드) · GitHub Pages(프론트)
+| 구분 | 기술 |
+| --- | --- |
+| **Frontend** | React 19 · TypeScript · Vite · React Router · TanStack Query · Axios |
+| **Backend** | Java 17 · Spring Boot 4 · Spring Data JPA · QueryDSL · Spring Security(세션) · Redis(Spring Cache) · Apache POI · springdoc-openapi · p6spy |
+| **Database** | MySQL(로컬) · PostgreSQL(운영) |
+| **Test** | JUnit 5 · Mockito · H2 |
+| **CI/CD** | GitHub Actions · Render(백엔드) · GitHub Pages(프론트) |
 
 ## 주요 기능
 
@@ -34,9 +37,10 @@
 **업무 흐름**
 
 ```
-발주 작성(DRAFT) → 관리자 승인(APPROVED) → 입고 진행(ORDERED)
-      → 입고 등록(재고 +) → 부분/완료 입고(PARTIAL_RECEIVED/RECEIVED)
-재고 사용 신청(REQUESTED) → 관리자 승인(APPROVED, 재고 −) / 반려(REJECTED)
+[발주]      작성(DRAFT) → 관리자 승인(APPROVED) / 반려(REJECTED)
+            → 입고 진행(ORDERED) → 입고 등록(재고 +) → 부분/완료 입고(PARTIAL_RECEIVED / RECEIVED)
+
+[재고 사용]  신청(REQUESTED) → 관리자 승인(APPROVED, 재고 −) / 반려(REJECTED)
 ```
 
 승인/반려는 서버에서 `hasRole("ADMIN")`으로 잠그고 프론트에서도 버튼을 숨겨, 직원 계정의 API 직접 호출까지 차단합니다.
