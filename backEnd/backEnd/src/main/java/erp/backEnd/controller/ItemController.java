@@ -71,6 +71,13 @@ public class ItemController {
         return ResponseEntity.ok(response);
     }
 
+    @Operation(summary = "품목 사용 여부", description = "해당 품목이 발주/입고에 사용됐는지 반환한다. 사용된 품목은 수정·삭제가 제한된다.")
+    @GetMapping("/{id}/in-use")
+    public ResponseEntity<Boolean> inUse(
+            @Parameter(description = "품목 ID", example = "1") @PathVariable Long id) {
+        return ResponseEntity.ok(itemService.isInUse(id));
+    }
+
     @Operation(summary = "품목 삭제", description = "품목을 삭제한다.")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteItem(

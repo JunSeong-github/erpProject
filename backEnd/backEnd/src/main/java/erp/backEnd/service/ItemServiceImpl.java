@@ -9,6 +9,7 @@ import erp.backEnd.exception.ErrorCode;
 import erp.backEnd.config.CacheConfig;
 import erp.backEnd.repository.ItemBulkRepository;
 import erp.backEnd.repository.ItemRepository;
+import erp.backEnd.repository.PoItemRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
@@ -35,6 +36,7 @@ public class ItemServiceImpl implements ItemService {
     private final ItemExcelParser itemExcelParser;
     private final ItemBulkRepository itemBulkRepository;
     private final StockQueryCacheService stockQueryCacheService;
+    private final PoItemRepository poItemRepository;
 
     // 품목 전체 목록: 조회가 잦고 변경은 드물어 캐싱 이득이 큼.
     // 파라미터가 없으므로 단일 고정 키('all')로 저장. 등록/수정/삭제 시 evict 됨.
@@ -90,6 +92,10 @@ public class ItemServiceImpl implements ItemService {
         String oldItemName = item.getItemName();
 
         if (!oldItemCode.equals(req.getItemCode())) {
+            // 이미 발주/입고에 사용된 품목은 식별자(품목코드) 변경 불가. (품목명·단가는 아래에서 허용)
+            if (poItemRepository.existsByItem_Id(id)) {
+                throw new BusinessException(ErrorCode.ITEM_CODE_IN_USE);
+            }
             if (itemRepository.existsByItemCode(req.getItemCode())) {
                 throw new IllegalArgumentException("이미 존재하는 품목코드입니다.");
             }
@@ -121,6 +127,11 @@ public class ItemServiceImpl implements ItemService {
         Item item = itemRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("저장된 품목을 찾을 수 없습니다."));
 
+        // 발주/입고에 사용된 이력이 있으면 삭제 불가 (FK 로도 막히지만 명확한 메시지를 주기 위해 선검사)
+        if (poItemRepository.existsByItem_Id(id)) {
+            throw new BusinessException(ErrorCode.ITEM_IN_USE);
+        }
+
         // 재고가 남아있으면 삭제 불가 (정답값인 stock_qty 컬럼 기준)
         Long stock = item.getStockQty();
         if (stock != null && stock > 0) {
@@ -128,6 +139,12 @@ public class ItemServiceImpl implements ItemService {
         }
 
         itemRepository.deleteById(id);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public boolean isInUse(Long id) {
+        return poItemRepository.existsByItem_Id(id);
     }
 
     /**

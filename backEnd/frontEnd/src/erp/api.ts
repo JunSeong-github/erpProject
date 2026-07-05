@@ -458,6 +458,10 @@ export const getItemDetail = (id: number) =>
     api.get<Item>(`${baseUrl}/items/${id}`).then((r) => r.data);
 /** 아이템 상세조회 */
 
+/** 아이템 사용여부(발주/입고에 사용됐는지) — 사용된 품목은 수정·삭제 제한 */
+export const getItemInUse = (id: number) =>
+    api.get<boolean>(`${baseUrl}/items/${id}/in-use`).then((r) => r.data);
+
 /** 아이템 삭제 */
 
 export const deleteItem = (id: number) =>
@@ -628,6 +632,10 @@ export const checkVendorNameDuplicate = (vendorName: string) =>
 /** 공급사 상세조회 */
 export const getVendorDetail = (vendorCode: string) =>
     api.get<Vendor>(`${baseUrl}/vendors/${vendorCode}`).then((r) => r.data);
+
+/** 공급사 사용여부(발주에 사용됐는지) — 사용된 공급사는 수정·삭제 제한 */
+export const getVendorInUse = (vendorCode: string) =>
+    api.get<boolean>(`${baseUrl}/vendors/${vendorCode}/in-use`).then((r) => r.data);
 
 /** 공급사 삭제 */
 export const deleteVendor = (vendorCode: string) =>

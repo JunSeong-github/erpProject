@@ -25,6 +25,9 @@ public interface ItemService {
 
     void delete(Long id);
 
+    /** 해당 품목이 발주(→입고)에 사용된 적 있는지 여부. 사용된 품목은 수정·삭제를 제한한다. */
+    boolean isInUse(Long id);
+
     Page<ItemResponse> findSearchPageComplex(ItemSearchCondition condition, Pageable pageable);
 
     Page<StockResponse> findStockPage(ItemSearchCondition condition, Pageable pageable);

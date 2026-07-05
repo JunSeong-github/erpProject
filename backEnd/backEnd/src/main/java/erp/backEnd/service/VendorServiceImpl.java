@@ -81,6 +81,13 @@ public class VendorServiceImpl implements VendorService {
         Vendor vendor = vendorRepository.findByVendorCode(vendorCode)
                 .orElseThrow(() -> new IllegalArgumentException("저장된 공급사를 찾을 수 없습니다."));
 
+        // 이미 발주에 사용된 공급사는 식별자(공급사코드) 변경 불가. (updateForm 은 공급사명만 바꾸므로
+        // 코드 변경 시도가 조용히 무시되지 않도록 명시적으로 안내한다.)
+        if (req.getVendorCode() != null && !vendorCode.equals(req.getVendorCode())
+                && poRepository.existsByVendor_VendorCode(vendorCode)) {
+            throw new BusinessException(ErrorCode.VENDOR_CODE_IN_USE);
+        }
+
         if (!vendor.getVendorName().equals(req.getVendorName())
                 && vendorRepository.existsByVendorName(req.getVendorName())) {
             throw new IllegalArgumentException("이미 존재하는 공급사명입니다.");
@@ -112,6 +119,12 @@ public class VendorServiceImpl implements VendorService {
         }
 
         vendorRepository.deleteById(vendorCode);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public boolean isInUse(String vendorCode) {
+        return poRepository.existsByVendor_VendorCode(vendorCode);
     }
 
     // ==================== 대량 공급사 업로드(엑셀) ====================

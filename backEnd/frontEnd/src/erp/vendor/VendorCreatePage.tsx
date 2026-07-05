@@ -1,6 +1,6 @@
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { checkVendorDuplicate, checkVendorNameDuplicate, createVendor, deleteVendor, getVendorDetail, updateVendor } from "../api";
+import { checkVendorDuplicate, checkVendorNameDuplicate, createVendor, deleteVendor, getVendorDetail, getVendorInUse, updateVendor } from "../api";
 import { useQuery } from "@tanstack/react-query";
 
 export default function VendorCreatePage() {
@@ -41,6 +41,14 @@ export default function VendorCreatePage() {
         queryFn: () => getVendorDetail(String(code)),
         enabled: isEdit,
     });
+
+    // 발주에 사용된 공급사인지 여부. 사용됐으면 수정·삭제를 막는다.
+    const { data: inUse } = useQuery({
+        queryKey: ["vendorInUse", code],
+        queryFn: () => getVendorInUse(String(code)),
+        enabled: isEdit,
+    });
+    const locked = isEdit && inUse === true;
 
     useEffect(() => {
         if (!vendorDetail) return;
@@ -98,6 +106,10 @@ export default function VendorCreatePage() {
     };
 
     const handleSave = async () => {
+        if (locked) {
+            alert("발주에 사용된 공급사는 수정할 수 없습니다.");
+            return;
+        }
         if (!vendorCode) {
             alert("공급사코드를 입력하세요.");
             return;
@@ -144,6 +156,10 @@ export default function VendorCreatePage() {
 
     const handleDelete = async () => {
         if (!code) return;
+        if (locked) {
+            alert("발주에 사용된 공급사는 삭제할 수 없습니다.");
+            return;
+        }
 
         const ok = confirm("정말로 이 공급사를 삭제할까요?");
         if (!ok) return;
@@ -161,6 +177,21 @@ export default function VendorCreatePage() {
     return (
         <div>
             <h2>{isEdit ? "공급사 수정" : "공급사 작성"}</h2>
+
+            {locked && (
+                <div
+                    style={{
+                        color: "#b00020",
+                        background: "#fff3f3",
+                        border: "1px solid #f0c0c0",
+                        borderRadius: "4px",
+                        padding: "8px 10px",
+                        marginBottom: "10px",
+                    }}
+                >
+                    ⚠ 이 공급사는 발주에 사용된 이력이 있어 <b>수정·삭제할 수 없습니다.</b>
+                </div>
+            )}
 
             <div>
                 <label>공급사 코드 :&nbsp;</label>
@@ -191,6 +222,7 @@ export default function VendorCreatePage() {
                         type="text"
                         value={vendorName}
                         style={{ width: "150px" }}
+                        disabled={locked}
                         onChange={(e) => {
                             setVendorName(e.target.value);
                             setNameOk(false);
@@ -201,19 +233,19 @@ export default function VendorCreatePage() {
                 <button
                     type="button"
                     onClick={checkNameDuplicate}
-                    disabled={isCheckingName}
+                    disabled={isCheckingName || locked}
                 >
                     {isCheckingName ? "확인중..." : "중복확인"}
                 </button>
             </div>
 
             <div style={{ marginTop: "12px" }}>
-                <button type="button" onClick={handleSave}>
+                <button type="button" onClick={handleSave} disabled={isSaving || locked}>
                     {isSaving ? "저장 중..." : isEdit ? "수정" : "저장"}
                 </button>
 
                 {isEdit && (
-                    <button type="button" onClick={handleDelete} style={{ marginLeft: "8px" }}>
+                    <button type="button" onClick={handleDelete} disabled={locked} style={{ marginLeft: "8px" }}>
                         삭제
                     </button>
                 )}

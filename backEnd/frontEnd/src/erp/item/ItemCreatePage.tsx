@@ -1,6 +1,6 @@
 import {useLocation, useNavigate, useParams} from "react-router-dom";
 import {useEffect, useState} from "react";
-import {checkItemDuplicate, checkItemNameDuplicate, createItem, deleteItem, getItemDetail, updateItem} from "../api";
+import {checkItemDuplicate, checkItemNameDuplicate, createItem, deleteItem, getItemDetail, getItemInUse, updateItem} from "../api";
 import {useQuery} from "@tanstack/react-query";
 
 
@@ -23,6 +23,14 @@ export default function ItemCreatePage(){
         queryFn:()=> getItemDetail(Number(id)),
         enabled:isEdit,
     });
+
+    // 발주/입고에 사용된 품목인지 여부. 사용됐으면 수정·삭제를 막는다.
+    const { data:inUse } = useQuery({
+        queryKey:["itemInUse", id],
+        queryFn:()=> getItemInUse(Number(id)),
+        enabled:isEdit,
+    });
+    const locked = isEdit && inUse === true;
 
     useEffect(() => {
         if(!itemDetail) return;
@@ -90,6 +98,10 @@ export default function ItemCreatePage(){
     }
 
     const handleSave= async() =>{
+        if(locked){
+            alert("발주·입고에 사용된 품목은 수정할 수 없습니다.");
+            return;
+        }
         if(!itemCode){
             alert("품목코드를 입력하세요.");
             return;
@@ -142,6 +154,10 @@ export default function ItemCreatePage(){
 
     const handleDelete = async () => {
         if (!id) return;
+        if (locked) {
+            alert("발주·입고에 사용된 품목은 삭제할 수 없습니다.");
+            return;
+        }
 
         const ok = confirm("정말로 이 물품을 삭제할까요?");
         if (!ok) return;
@@ -181,6 +197,21 @@ export default function ItemCreatePage(){
         <div>
             <h2>{isEdit ? "품목 수정" : "품목 작성"}</h2>
 
+            {locked && (
+                <div
+                    style={{
+                        color: "#b00020",
+                        background: "#fff3f3",
+                        border: "1px solid #f0c0c0",
+                        borderRadius: "4px",
+                        padding: "8px 10px",
+                        marginBottom: "10px",
+                    }}
+                >
+                    ⚠ 이 품목은 발주·입고에 사용된 이력이 있어 <b>수정·삭제할 수 없습니다.</b>
+                </div>
+            )}
+
             <div>
 
                 <label>품목 코드 :&nbsp;</label>
@@ -188,6 +219,7 @@ export default function ItemCreatePage(){
                         type="text"
                         value={itemCode}
                         style={{width: "80px"}}
+                        disabled={locked}
                         onChange={(e) =>{
                             setItemCode(e.target.value);
                             setCodeOk(false);
@@ -197,7 +229,7 @@ export default function ItemCreatePage(){
                 <button
                     type="button"
                     onClick={checkDuplicate}
-                    disabled={isChecking}
+                    disabled={isChecking || locked}
                 >
                     {isChecking ? "확인중..." : "중복확인"}
                 </button>
@@ -208,6 +240,7 @@ export default function ItemCreatePage(){
                         type="text"
                         value={itemName}
                         style={{width: "80px"}}
+                        disabled={locked}
                         onChange={(e) => {
                             setItemName(e.target.value);
                             setNameOk(false);
@@ -218,7 +251,7 @@ export default function ItemCreatePage(){
                 <button
                     type="button"
                     onClick={checkNameDuplicate}
-                    disabled={isCheckingName}
+                    disabled={isCheckingName || locked}
                 >
                     {isCheckingName ? "확인중..." : "중복확인"}
                 </button>
@@ -229,18 +262,19 @@ export default function ItemCreatePage(){
                         type="text"
                         value={standardPrice}
                         style={{width: "80px"}}
+                        disabled={locked}
                         onChange={(e) => setStandardPrice(e.target.value)}
                     />
                 </label>
 
             </div>
 
-            <button type="button" onClick={handleSave} disabled={isSaving}>
+            <button type="button" onClick={handleSave} disabled={isSaving || locked}>
                 {isSaving ? "저장 중..." : isEdit ? "수정" : "저장"}
             </button>
 
             {isEdit && (
-                <button type="button" onClick={handleDelete}>
+                <button type="button" onClick={handleDelete} disabled={locked}>
                   삭제
                 </button>
             )}

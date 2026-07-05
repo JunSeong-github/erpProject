@@ -30,6 +30,9 @@ public interface VendorService {
 
     void delete(String vendorCode);
 
+    /** 해당 공급사가 발주에 사용된 적 있는지 여부. 사용된 공급사는 수정·삭제를 제한한다. */
+    boolean isInUse(String vendorCode);
+
     /** [대량 공급사 - 미리보기] 엑셀을 파싱+검증만 하고 저장하지 않는다. */
     BulkVendorPreviewResponse bulkPreview(MultipartFile file);
 

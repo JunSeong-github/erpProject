@@ -204,7 +204,7 @@ export default function PoListPage() {
 
                         <tr>
                             <th style={{ border: "1px solid #ccc", padding: "4px" }}>순번</th>
-                            <th style={{ border: "1px solid #ccc", padding: "4px" }}>공급사</th>
+                            <th style={{ border: "1px solid #ccc", padding: "4px" }}>공급사(공급사코드)</th>
                             <th style={{ border: "1px solid #ccc", padding: "4px" }}>납기요청일</th>
                             <th style={{ border: "1px solid #ccc", padding: "4px" }}>상태</th>
                             <th style={{ border: "1px solid #ccc", padding: "4px" }}>발주번호</th>
@@ -242,8 +242,8 @@ export default function PoListPage() {
                                 <td style={{ border: "1px solid #ccc", padding: "4px", textAlign: "center" }}>
                                     {po.id}
                                 </td>
-                                <td style={{ border: "1px solid #ccc", padding: "4px" }}>
-                                    {po.etc}
+                                <td style={{ border: "1px solid #ccc", padding: "4px" }} title={po.etc}>
+                                    {po.etc && po.etc.length > 10 ? po.etc.slice(0, 10) + "..." : po.etc}
                                 </td>
                                 <td style={{ border: "1px solid #ccc", padding: "4px" }}>
                                     {po.createDate?.slice(0, 10)}

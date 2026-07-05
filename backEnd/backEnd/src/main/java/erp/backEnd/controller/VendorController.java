@@ -88,6 +88,14 @@ public class VendorController {
         return ResponseEntity.ok(response);
     }
 
+    // 공급사 사용 여부(발주에 사용됐는지)
+    @Operation(summary = "공급사 사용 여부", description = "해당 공급사가 발주에 사용됐는지 반환한다. 사용된 공급사는 수정·삭제가 제한된다.")
+    @GetMapping("/{vendorCode}/in-use")
+    public ResponseEntity<Boolean> inUse(
+            @Parameter(description = "공급사 코드", example = "V001") @PathVariable String vendorCode) {
+        return ResponseEntity.ok(vendorService.isInUse(vendorCode));
+    }
+
     // 공급사 삭제
     @Operation(summary = "공급사 삭제", description = "공급사 코드로 대상을 삭제한다.")
     @DeleteMapping("/{vendorCode}")
