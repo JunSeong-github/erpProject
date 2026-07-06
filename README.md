@@ -175,6 +175,23 @@ springdoc-openapi로 컨트롤러에서 API 명세를 자동 생성합니다(`/s
 
 ![Swagger UI — 도메인별로 그룹핑된 API 문서](docs/swagger.png)
 
+## 트러블슈팅 (주요 사례)
+
+배포·운영 중 실제로 부딪힌 문제와 해결 과정을 정리했습니다. 더 자세한 내용은 [TROUBLESHOOTING.md](TROUBLESHOOTING.md)에 있습니다.
+
+**SPA + 세션 인증의 Cross-Site 쿠키 문제**
+- **문제** 배포 후 프론트(github.io)와 백엔드(onrender.com)의 출처가 달라, 로그인은 되지만 이후 요청에서 세션이 유지되지 않아 승인·반려 시 401이 발생했습니다.
+- **원인** 브라우저가 cross-site 요청에는 기본 SameSite(Lax) 쿠키를 전송하지 않습니다.
+- **해결** 쿠키를 `SameSite=None; Secure`로 설정하고, 서버 `allowCredentials` + 프론트 `withCredentials`를 맞췄으며, CORS를 `SecurityConfig` 한 곳으로 일원화해 헤더 중복을 제거했습니다.
+
+**배포 DB 전환 (MySQL → PostgreSQL) & 한글 에러 메시지 인코딩**
+- **DB 전환** Render 무료 티어가 PostgreSQL이라 로컬(MySQL)과 분리 → `local`/`prod` 프로필로 드라이버·배치 파라미터·접속정보를 분기 처리했습니다.
+- **인코딩** 한글 에러 메시지를 응답 헤더에 담았다가 톰캣 단계에서 비-ASCII가 누락되는 문제 → `ErrorCode` + `BusinessException`으로 응답 본문(JSON)에 담아 일관 처리했습니다.
+
+**Redis 캐싱 self-invocation 프록시 함정**
+- **문제** `@Cacheable`을 붙였는데 캐시가 동작하지 않았습니다.
+- **원인·해결** 같은 빈 내부에서 자기 메서드를 호출하면 AOP 프록시를 거치지 않아 캐싱이 무력화됩니다 → 캐싱 대상 메서드를 별도 빈으로 분리해 외부 호출하도록 리팩터링했습니다.
+
 ## 실행 방법
 
 사전 준비: JDK 17, Node.js, MySQL(`erp` 스키마 생성), Redis(로컬 캐싱용). DB 접속 정보는 환경변수로 주입합니다.
